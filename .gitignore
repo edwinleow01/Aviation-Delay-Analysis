@@ -1,0 +1,17 @@
+# Source data: large BTS CSVs/zips. Re-download with scripts/download_bts.py (see README).
+data/
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+.vscode/
+.idea/
