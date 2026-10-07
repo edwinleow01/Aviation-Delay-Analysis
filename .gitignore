@@ -1,5 +1,5 @@
 # Source data: large BTS CSVs/zips. Re-download with scripts/download_bts.py (see README).
-data/
+/data/
 
 # Python
 .venv/

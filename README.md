@@ -41,6 +41,27 @@ Then open `notebooks/01_data_check.ipynb` (Week 1 gate) and `notebooks/02_analys
 `report/aviation_delay_report.html`, plus chart PNGs in `report/figures/` for the portfolio page.
 `make pdf` also prints it to PDF with headless Chrome. The case-study page is written by hand: update its numbers if the data changes.
 
+## Interactive app (Streamlit)
+
+```bash
+make app          # = streamlit run app/streamlit_app.py  -> http://localhost:8501
+```
+
+The app reads only the small tables in `app/aggregates/` (≈400 KB, committed), so it runs without
+downloading the BTS data. After rebuilding the dataset, refresh them with `make app-data`.
+`tests/test_aggregates.py` and `tests/test_app.py` check that the app reproduces the report's numbers.
+To put it online, deploy `app/streamlit_app.py` on Streamlit Community Cloud (it uses `app/requirements.txt`).
+
+**2-minute demo script**
+
+1. **Overview:** network average 5.2 min per flight; 2 airlines flagged; the first-wave fix is worth 20,600 h a year.
+2. **Airline explorer → SkyWest:** 1.54× the network, still 1.34× against others at the same airports, in both years.
+   The hour chart shows the gap is widest early in the morning. The bottom table shows where it's worst
+   (Midland/Odessa, Nashville, LaGuardia, …).
+3. **Airport explorer → Detroit:** the most delay of any major airport, and much of it is SkyWest (13.7 min per departure there).
+4. **What-if calculator:** the defaults give the report's 20,600 h. Drag the slider to 50% for 10,300 h,
+   or add the 17–21 band to show the evening opportunity.
+
 ## Getting the source data
 
 `data/` is git-ignored. Re-create it with one of these:
@@ -74,8 +95,9 @@ Cancelled, Diverted, CarrierDelay, WeatherDelay, NASDelay, SecurityDelay, LateAi
 ## Layout
 
 ```
-src/aviation_delays/   data.py (load/clean), metrics.py, charts.py, airport_names.csv (BTS lookup)
-scripts/               download_bts.py, build_dataset.py
+src/aviation_delays/   data.py (load/clean), metrics.py, charts.py, aggregates.py (app tables), airport_names.csv
+app/                   streamlit_app.py, aggregates/ (small summary tables), requirements.txt
+scripts/               download_bts.py, build_dataset.py, build_app_data.py
 notebooks/             01_data_check.ipynb, 02_analysis.ipynb
 report/                exported HTML report + figures (generated)
 tests/                 pytest + synthetic BTS-shaped fixture (not real data)
@@ -83,5 +105,4 @@ tests/                 pytest + synthetic BTS-shaped fixture (not real data)
 
 ## Out of scope / future work
 
-Weather-delay analysis, route/distance effects, predictive modelling, an interactive Streamlit app
-(stretch goal, only once the finding is solid).
+Weather-delay analysis, route/distance effects, predictive modelling.
