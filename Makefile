@@ -1,7 +1,7 @@
 PY := .venv/bin/python
 JUPYTER := .venv/bin/jupyter
 
-.PHONY: setup data dataset test report pdf
+.PHONY: setup data dataset test report pdf app app-data
 
 setup:            ## create venv and install dependencies
 	python3 -m venv .venv
@@ -12,6 +12,12 @@ data:             ## download BTS monthly files into data/raw/ (default 2024-01.
 
 dataset:          ## clean data/raw/ into data/processed/flights.parquet
 	$(PY) scripts/build_dataset.py
+
+app-data:         ## rebuild app/aggregates/ from data/processed/flights.parquet
+	$(PY) scripts/build_app_data.py
+
+app:              ## run the Streamlit app on http://localhost:8501
+	.venv/bin/streamlit run app/streamlit_app.py
 
 test:
 	.venv/bin/pytest -q
