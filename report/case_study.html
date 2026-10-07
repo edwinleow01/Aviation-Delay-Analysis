@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where Airlines Lose Time</title>
+<meta name="description" content="Case study: which US carriers and airports have disproportionately high carrier-attributable delay, and when. BTS data, 2024–2025.">
+<style>
+  :root {
+    color-scheme: light;
+    --bg: #fcfcfb;
+    --surface: #f3f2ee;
+    --text: #0b0b0b;
+    --text-2: #52514e;
+    --rule: #e6e5e0;
+    --accent: #2a78d6;
+    --accent-soft: #eaf2fc;
+    --figure-bg: #fcfcfb;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --bg: #1a1a19;
+      --surface: #252523;
+      --text: #ffffff;
+      --text-2: #c3c2b7;
+      --rule: #383835;
+      --accent: #5598e7;
+      --accent-soft: #1d2a3a;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --bg: #1a1a19;
+    --surface: #252523;
+    --text: #ffffff;
+    --text-2: #c3c2b7;
+    --rule: #383835;
+    --accent: #5598e7;
+    --accent-soft: #1d2a3a;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 17px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 56px 16px 72px; }
+  .kicker { color: var(--accent); font-weight: 600; font-size: 14px; letter-spacing: .04em; text-transform: uppercase; margin: 0 0 8px; }
+  h1 { font-size: clamp(30px, 6vw, 42px); line-height: 1.15; margin: 0 0 12px; letter-spacing: -.01em; }
+  .dek { color: var(--text-2); font-size: 19px; margin: 0 0 28px; }
+  .note { color: var(--text-2); font-size: 14.5px; font-style: italic; border-left: 3px solid var(--rule); padding-left: 14px; margin: 0 0 36px; }
+  h2 { font-size: 22px; margin: 44px 0 10px; }
+  h3 { font-size: 18px; margin: 28px 0 6px; }
+  p { margin: 0 0 14px; }
+  ul { margin: 0 0 14px; padding-left: 22px; }
+  li { margin-bottom: 6px; }
+  .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 0 0 8px; }
+  .stat { background: var(--surface); border-radius: 10px; padding: 16px; }
+  .stat b { display: block; font-size: 30px; line-height: 1.1; letter-spacing: -.01em; }
+  .stat span { color: var(--text-2); font-size: 14px; line-height: 1.4; display: block; margin-top: 6px; }
+  figure { margin: 18px 0 8px; }
+  figure img { width: 100%; height: auto; display: block; border-radius: 8px; background: var(--figure-bg); border: 1px solid var(--rule); }
+  .rec { background: var(--accent-soft); border-left: 4px solid var(--accent); border-radius: 8px; padding: 18px 20px; margin: 18px 0; }
+  .rec p:last-child { margin-bottom: 0; }
+  .big { font-size: 20px; font-weight: 600; }
+  .small { color: var(--text-2); font-size: 15px; }
+  footer { margin-top: 48px; padding-top: 18px; border-top: 1px solid var(--rule); color: var(--text-2); font-size: 15px; }
+  a { color: var(--accent); }
+  @media (max-width: 560px) {
+    body { font-size: 16px; }
+    .stats { grid-template-columns: 1fr; }
+    .stat b { font-size: 26px; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <p class="kicker">Data analytics case study</p>
+  <h1>Where airlines lose time</h1>
+  <p class="dek">Which US carriers and airports have more delay within their own control than everyone else, and when does it happen?</p>
+
+  <p class="note">This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is publicly available. BTS was chosen as the best available public dataset with the granularity needed for this kind of analysis.</p>
+
+  <div class="stats">
+    <div class="stat"><b>13.8M</b><span>US domestic flights analysed, Jan 2024 – Dec 2025</span></div>
+    <div class="stat"><b>1.3×</b><span>SkyWest and American's delay rate vs other airlines at the same airports</span></div>
+    <div class="stat"><b>20,600 h</b><span>delay a year recoverable by fixing their first flights of the day</span></div>
+  </div>
+
+  <h2>The problem</h2>
+  <p>Airlines can't control the weather or air traffic. But a third of all delay minutes in US flying (33%) come from causes inside the airline's own operation: maintenance, crew, cleaning, fuelling and baggage. That's where management action actually pays off. The question: <strong>which airports or carriers show disproportionately high carrier-attributable delay, and does time of day or day of week make it worse?</strong></p>
+
+  <h2>Approach</h2>
+  <ul>
+    <li><strong>Data:</strong> 14.1M flights from the US Bureau of Transportation Statistics, which records the cause of every delay of 15+ minutes. Cancelled and diverted flights are excluded from the delay measures.</li>
+    <li><strong>Measure:</strong> carrier-attributable delay minutes per flight. It's called <em>carrier-attributable</em>, not "mechanical", because BTS records maintenance in the same field as crew, cleaning and baggage.</li>
+    <li><strong>"Disproportionate"</strong> means at least 1.2× the network average in <em>each</em> year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.</li>
+    <li><strong>Robustness:</strong> re-run without the July 2024 CrowdStrike IT outage. The findings don't change.</li>
+  </ul>
+
+  <h2>What I found</h2>
+
+  <h3>1. Two carriers stand out</h3>
+  <p>SkyWest (a regional airline flying for United, Delta, American and Alaska) averages 8.0 minutes of carrier-attributable delay per flight, and American 7.2, against a network average of 5.2. Both stay about 1.3× higher than other airlines at the same airports, in 2024 and in 2025. They fail differently: SkyWest's delays are slightly rarer but nearly twice as long, and American's are more frequent.</p>
+  <figure><img src="figures/1_carriers.png" alt="Bar chart of carrier-attributable delay per flight by airline. SkyWest 8.0 and American 7.2 minutes are highlighted, against a network average of 5.2."></figure>
+
+  <h3>2. Airports matter far less than airlines</h3>
+  <p>Detroit, Madison and Des Moines are flagged, but together they account for about 5,600 excess delay hours a year. The two flagged carriers account for 68,100.</p>
+  <figure><img src="figures/2_airports.png" alt="Bar chart of the 15 airports with the most carrier-attributable delay per departure. Detroit 7.5, Madison 7.3 and Des Moines 6.7 minutes are highlighted."></figure>
+
+  <h3>3. Timing makes it worse, and the first wave is where the two carriers fall furthest behind</h3>
+  <p>Across all airlines, carrier-attributable delay is twice as high at 22:00 as at 10:00, and Sunday is the worst day. But SkyWest and American lose the most ground <em>before 09:00</em>, when the rest of the network is close to its best. There they run 1.76× and 1.51× the network rate.</p>
+  <figure><img src="figures/3_hour_weekday.png" alt="Heatmap of carrier-attributable delay by scheduled departure hour and weekday. Delay is lowest around 9 to 11 in the morning and highest around 22:00, especially on Sundays."></figure>
+
+  <h2>Recommendation</h2>
+  <div class="rec">
+    <p class="big">Fix the first wave at SkyWest and American.</p>
+    <p>Bringing their pre-09:00 departures down to the network's pre-09:00 rate would remove about <strong>20,600 delay hours a year</strong> (10,300 each). Likely places to look are overnight maintenance sign-off, crew show-up and aircraft preparation at the stations that launch the morning bank. The estimate is conservative, because a late first flight also delays later flights, and that knock-on delay isn't counted here.</p>
+  </div>
+
+  <h2>Limits</h2>
+  <p class="small">The data only records causes for delays of 15+ minutes. It can't tell maintenance apart from crew or cleaning, and airlines report the causes themselves. It covers US domestic flying only, so results may not carry over to other markets.</p>
+
+  <footer>
+    Python · pandas · matplotlib. Full report with method and supporting tables: <a href="aviation_delay_report.html">aviation_delay_report.html</a> (<a href="aviation_delay_report.pdf">PDF</a>).
+  </footer>
+</main>
+</body>
+</html>

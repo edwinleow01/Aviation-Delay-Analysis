@@ -13,3 +13,6 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.setuptools.package-data]
+aviation_delays = ["airport_names.csv"]

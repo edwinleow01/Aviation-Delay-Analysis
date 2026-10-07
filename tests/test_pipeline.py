@@ -98,3 +98,8 @@ def test_excess_by_band_sums_to_carrier_total():
     assert band["share_of_excess"].sum() == pytest.approx(1)
     yearly = metrics.yearly_index(af, "carrier")
     assert list(yearly.columns) == ["index_2024"]
+
+
+def test_airport_labels():
+    assert data.airport_label("DTW") == "Detroit, MI · DTW"
+    assert data.airport_label("ZZZ") == "ZZZ"

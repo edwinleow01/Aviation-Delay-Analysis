@@ -22,7 +22,10 @@ needed for this kind of analysis.
 - **Recommendation:** SkyWest and American should fix first-wave (pre-09:00) departure readiness. Matching the network's
   pre-09:00 rate would remove about **20,600 carrier-attributable delay hours a year**.
 
-Full report: [`report/aviation_delay_report.html`](report/aviation_delay_report.html) (charts in `report/figures/`).
+- **Portfolio case study (2-minute read):** [`report/case_study.html`](report/case_study.html), with the same text in
+  [`report/case_study.md`](report/case_study.md) plus the resume bullets.
+- **Full report** with method and supporting tables: [`report/aviation_delay_report.html`](report/aviation_delay_report.html)
+  ([PDF](report/aviation_delay_report.pdf)). Charts are in `report/figures/`.
 
 ## Quick start
 
@@ -36,6 +39,7 @@ make test
 Then open `notebooks/01_data_check.ipynb` (Week 1 gate) and `notebooks/02_analysis.ipynb` (Week 2).
 `make report` runs the analysis and writes a code-free HTML report to
 `report/aviation_delay_report.html`, plus chart PNGs in `report/figures/` for the portfolio page.
+`make pdf` also prints it to PDF with headless Chrome. The case-study page is written by hand: update its numbers if the data changes.
 
 ## Getting the source data
 
@@ -70,7 +74,7 @@ Cancelled, Diverted, CarrierDelay, WeatherDelay, NASDelay, SecurityDelay, LateAi
 ## Layout
 
 ```
-src/aviation_delays/   data.py (load/clean), metrics.py, charts.py
+src/aviation_delays/   data.py (load/clean), metrics.py, charts.py, airport_names.csv (BTS lookup)
 scripts/               download_bts.py, build_dataset.py
 notebooks/             01_data_check.ipynb, 02_analysis.ipynb
 report/                exported HTML report + figures (generated)

@@ -18,6 +18,7 @@ Cleaning rules (see README "Data notes" for the reasoning):
 
 from __future__ import annotations
 
+from functools import lru_cache
 from pathlib import Path
 
 import numpy as np
@@ -92,6 +93,23 @@ CARRIER_NAMES = {
 
 def carrier_label(code: str) -> str:
     return f"{CARRIER_NAMES[code]} · {code}" if code in CARRIER_NAMES else code
+
+
+# City names for origin airports, from the BTS L_AIRPORT lookup table
+# (transtats.bts.gov, Download_Lookup.asp?Y11x72=Y_NVecbeg), limited to airports in the 2024-25 data.
+_AIRPORTS_CSV = Path(__file__).with_name("airport_names.csv")
+
+
+@lru_cache(maxsize=1)
+def airport_cities() -> dict[str, str]:
+    """Code -> "City, ST" (e.g. "DTW" -> "Detroit, MI")."""
+    table = pd.read_csv(_AIRPORTS_CSV, dtype=str)
+    return dict(zip(table["code"], table["city"]))
+
+
+def airport_label(code: str) -> str:
+    city = airport_cities().get(code)
+    return f"{city} · {code}" if city else code
 
 
 DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
