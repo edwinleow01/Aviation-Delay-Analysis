@@ -69,6 +69,31 @@ ALIASES = {
     "LATE_AIRCRAFT_DELAY": "LateAircraftDelay",
 }
 
+# Reporting_Airline codes in 2024-25 BTS data. Regional carriers (OO, YX, MQ, OH, 9E)
+# operate flights under mainline brands but report their own performance.
+CARRIER_NAMES = {
+    "AA": "American",
+    "AS": "Alaska",
+    "B6": "JetBlue",
+    "DL": "Delta",
+    "F9": "Frontier",
+    "G4": "Allegiant",
+    "HA": "Hawaiian",
+    "MQ": "Envoy (regional)",
+    "NK": "Spirit",
+    "OH": "PSA (regional)",
+    "OO": "SkyWest (regional)",
+    "UA": "United",
+    "WN": "Southwest",
+    "YX": "Republic (regional)",
+    "9E": "Endeavor (regional)",
+}
+
+
+def carrier_label(code: str) -> str:
+    return f"{CARRIER_NAMES[code]} · {code}" if code in CARRIER_NAMES else code
+
+
 DAY_NAMES = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 

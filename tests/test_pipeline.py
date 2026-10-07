@@ -89,3 +89,12 @@ def test_build_and_metrics_on_synthetic(tmp_path):
     assert metrics.cause_breakdown(af)["share"].sum() == pytest.approx(1)
     adj = metrics.mix_adjusted(af, "carrier", "origin")
     assert set(adj.index) == set(by_carrier.index)
+
+
+def test_excess_by_band_sums_to_carrier_total():
+    af = data.analysis_frame(data.clean(make_raw(20_000, seed=2)))
+    band = metrics.excess_by_band(af, "NK")
+    assert band["share_of_flights"].sum() == pytest.approx(1)
+    assert band["share_of_excess"].sum() == pytest.approx(1)
+    yearly = metrics.yearly_index(af, "carrier")
+    assert list(yearly.columns) == ["index_2024"]

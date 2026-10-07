@@ -19,7 +19,6 @@ Core metrics per group:
 
 from __future__ import annotations
 
-import numpy as np
 import pandas as pd
 
 CAUSES = ["carrier_delay", "weather_delay", "nas_delay", "security_delay", "late_aircraft_delay"]
@@ -70,12 +69,41 @@ def group_metrics(af: pd.DataFrame, by: str | list[str], min_flights: int = 0) -
     )
     out["index"] = out["carrier_min_per_flight"] / net["carrier_min_per_flight"]
     out["excess_hours"] = (out["carrier_min_per_flight"] - net["carrier_min_per_flight"]) * out["flights"] / 60
-    # z-score of the carrier-delayed rate vs network (binomial). With millions of
-    # flights nearly everything is "significant"; use it to screen out small-n noise.
-    p = net["carrier_delayed_rate"]
-    out["rate_z"] = (out["carrier_delayed_rate"] - p) / np.sqrt(p * (1 - p) / out["flights"])
     out = out[out["flights"] >= min_flights]
     return out.sort_values("carrier_min_per_flight", ascending=False)
+
+
+def yearly_index(af: pd.DataFrame, by: str, min_flights: int = 0) -> pd.DataFrame:
+    """``index`` computed separately per calendar year (one column per year), each
+    year against that year's own network rate. A finding should hold in every year."""
+    years = sorted(af["date"].dt.year.unique())
+    cols = {
+        y: group_metrics(af[af["date"].dt.year == y], by, min_flights=min_flights)["index"] for y in years
+    }
+    return pd.DataFrame(cols).add_prefix("index_")
+
+
+TIME_BANDS = {"<09:00": (0, 9), "09–13": (9, 13), "13–17": (13, 17), "17–21": (17, 21), "21+": (21, 24)}
+
+
+def time_band(af: pd.DataFrame) -> pd.Series:
+    """Scheduled-departure time band, as an ordered categorical."""
+    edges = [lo for lo, _ in TIME_BANDS.values()] + [24]
+    return pd.cut(af["dep_hour"].astype(int), edges, right=False, labels=list(TIME_BANDS))
+
+
+def excess_by_band(af: pd.DataFrame, carrier: str) -> pd.DataFrame:
+    """One carrier vs the network within each time band: rate, gap and excess hours per year."""
+    years = af["date"].dt.year.nunique()
+    af = af.assign(band=time_band(af))
+    network = af.groupby("band", observed=True)["carrier_delay"].mean()
+    g = af[af["carrier"] == carrier].groupby("band", observed=True)["carrier_delay"]
+    out = pd.DataFrame({"flights": g.size(), "min_per_flight": g.mean(), "network_min_per_flight": network})
+    out["vs_network"] = out["min_per_flight"] / out["network_min_per_flight"]
+    out["excess_hours_per_year"] = (out["min_per_flight"] - out["network_min_per_flight"]) * out["flights"] / 60 / years
+    out["share_of_flights"] = out["flights"] / out["flights"].sum()
+    out["share_of_excess"] = out["excess_hours_per_year"] / out["excess_hours_per_year"].sum()
+    return out
 
 
 def mix_adjusted(af: pd.DataFrame, entity: str, control: str, min_flights: int = 0) -> pd.DataFrame:
