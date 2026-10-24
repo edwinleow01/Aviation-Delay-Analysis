@@ -30,11 +30,12 @@ from aviation_delays.data import (  # noqa: E402
 from aviation_delays.metrics import TIME_BANDS  # noqa: E402
 
 AUTHOR = "Edwin Leow"
-REPO_URL = "https://github.com/edwinleow01/Aviation-Delay-Analysis"
+REPORT_PDF = APP_DIR.parent / "report" / "aviation_delay_report.pdf"
 
 # Chart colours: each one has a single job everywhere in the app.
 FLAGGED = "#eb6834"    # orange: flagged as disproportionate
 FLAGGED_2 = "#a8431a"  # dark orange: second flagged airline when two share a chart
+FLAGGED_MORE = [FLAGGED, FLAGGED_2, "#f4a06f", "#6e2b10", "#c95a2a"]  # oranges, one per flagged airline
 SELECTED = "#2a78d6"   # blue: the airline or airport you picked
 COMPARE = "#1baf7a"    # aqua: the comparison airline
 NEUTRAL = "#b9c3d1"    # blue-grey: everything else
@@ -43,7 +44,7 @@ MAP_SCALE = [[0.0, "#2a78d6"], [0.5, "#c9ced6"], [1.0, "#eb6834"]]  # better ↔
 
 MIN_CARRIER_FLIGHTS = 50_000
 MIN_AIRPORT_FLIGHTS = 20_000
-TABS = ["Findings", "Airlines", "Airports", "What if"]
+TABS = ["Findings", "Airlines", "Airports", "What if", "Method & report"]
 BOTH = "Both years"
 PLOTLY_CONFIG = {"displayModeBar": False, "topojsonURL": "app/static/"}
 
@@ -58,6 +59,9 @@ st.html("""
   .finding-no { font-family: "JetBrains Mono", monospace; font-size: .8rem; letter-spacing: .1em; opacity: .65; }
   .pull { font-family: "SourceSerif", serif; font-size: 2.6rem; font-weight: 700; line-height: 1.05; }
   .pull-label { font-size: .9rem; opacity: .75; }
+  .toc { font-size: .9rem; margin: .4rem 0 .2rem; }
+  .toc a { margin-right: 1.1rem; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
 </style>
 """)
 
@@ -360,8 +364,9 @@ with st.sidebar:
     st.subheader("Getting around")
     st.markdown(
         "**Findings** tells the story in three charts. **Airlines** and **Airports** let you dig into any one of "
-        "them; click a bar or a dot on the map to jump there. **What if** works out what a fix would be worth.\n\n"
-        "Hover over a chart for exact numbers."
+        "them; click a bar or a dot on the map to jump there. **What if** works out what a fix would be worth. "
+        "**Method & report** explains how it was done and has the full report as a PDF.\n\n"
+        "Hover over a chart for exact numbers. Short on time? Read just the bold lines on the Findings tab."
     )
     st.segmented_control("Period", YEAR_OPTIONS, key="year", help="Both years together, or one year on its own.")
     with st.expander("What the numbers mean"):
@@ -378,7 +383,7 @@ with st.sidebar:
         )
     st.divider()
     st.caption(
-        f"Built by {AUTHOR} with Python, pandas and Streamlit. [Code and full report on GitHub]({REPO_URL}).\n\n"
+        f"Built by {AUTHOR} with Python, pandas and Streamlit.\n\n"
         "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. I used BTS because CAAS/data.gov.sg "
         "only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is publicly "
         "available."
@@ -388,7 +393,7 @@ with st.sidebar:
 first_wave = sum(agg.what_if(by_time, c, ["<09:00"]) for c in flagged)
 left, right = st.columns([5, 4], gap="large")
 with left:
-    st.html(f'<p class="kicker">Case study · US aviation · {period}</p>')
+    st.html(f'<p class="kicker">Case study · US aviation · {period} · 3-minute read</p>')
     st.title("Where airlines lose time")
     st.html(
         '<p class="standfirst">Weather and air traffic get the blame for late flights, but a third of delay minutes '
@@ -409,28 +414,42 @@ with left:
 with right:
     st.html(departures_board(carriers, f"CARRIER-ATTRIBUTABLE DELAY · {period}"))
 
-tab_findings, tab_airline, tab_airport, tab_whatif = st.tabs(TABS, key="tab", on_change="rerun")
+tab_findings, tab_airline, tab_airport, tab_whatif, tab_method = st.tabs(TABS, key="tab", on_change="rerun")
 
 # ---- findings -------------------------------------------------------------------------
+def back_to_both_years() -> None:
+    st.session_state["year"] = BOTH
+
+
 with tab_findings:
+    if st.session_state["year"] != BOTH:
+        n1, n2 = st.columns([5, 1], vertical_alignment="center")
+        n1.info(f"You're looking at **{period} only**. The main conclusion uses both years together, which is stricter: "
+                "an airline has to stand out in each year to be flagged. Single years can flag a few more airlines.")
+        n2.button("Back to both years", on_click=back_to_both_years, key="both_years")
+    st.html('<div class="toc"><a href="#f1">01 Airlines</a><a href="#f2">02 First flights</a>'
+            '<a href="#f3">03 Airports</a><a href="#so-what">So what</a></div>')
+    names = (", ".join(short(c) for c in flagged[:-1]) + " and " + short(flagged[-1])) if len(flagged) > 1 else \
+        (short(flagged[0]) if flagged else "No airline")
     s1, s2, s3 = st.columns(3)
     s1.html(f'<div class="pull">{net:.1f} min</div><div class="pull-label">average carrier-attributable delay per '
             'flight, across every airline</div>')
     s2.html(f'<div class="pull">{len(flagged)} airlines</div><div class="pull-label">stand out on every test: '
-            f'{" and ".join(short(c) for c in flagged) or "none"}</div>')
+            f'{names if flagged else "none"}</div>')
     s3.html(f'<div class="pull">{round(first_wave, -2):,.0f} h</div><div class="pull-label">of delay a year that '
             'fixing their first flights of the day would remove</div>')
 
     st.html('<p class="finding-no">FINDING 01</p>')
-    st.subheader(f"{' and '.join(short(c) for c in flagged) or 'No airline'} lose the most time to their own delays")
+    plural = len(flagged) > 1
+    st.subheader(f"{names} {'lose' if plural or not flagged else 'loses'} the most time to their own delays", anchor="f1")
     if flagged:
-        r = [carriers.loc[c] for c in flagged]
+        worst_adj = min(carriers.loc[c, "adj_index"] for c in flagged)
+        subject = "Both are" if len(flagged) == 2 else "All of them are" if plural else "It is"
+        rates = "; ".join(f"{short(c)} averages {carriers.loc[c, 'min_per_flight']:.1f} min per flight" for c in flagged[:2])
         st.markdown(
-            f"{short(flagged[0])} averages {r[0]['min_per_flight']:.1f} minutes per flight"
-            + (f" and {short(flagged[1])} {r[1]['min_per_flight']:.1f}" if len(flagged) > 1 else "")
-            + f", against {net:.1f} for the network. Both are still at least {min(x['adj_index'] for x in r):.1f}× "
-            "worse than other airlines flying from the same airports, so it isn't just where they fly. "
-            "Click a bar to look closer."
+            f"**{names} {'stand' if plural else 'stands'} out, and not because of where they fly.** {rates}, against "
+            f"{net:.1f} for the network. {subject} still at least {worst_adj:.1f}× worse than other airlines flying "
+            "from the same airports. Click a bar to look closer."
         )
     labels = [carrier_label(c) for c in carriers.index]
     hbar(carriers, labels, set(flagged), "Carrier-attributable delay (min per flight)", key="overview_chart",
@@ -442,12 +461,12 @@ with tab_findings:
     worst_bands = {agg.band_table(by_time, c)["excess_hours_per_year"].idxmax() for c in flagged}
     first_wave_story = bool(flagged) and worst_bands == {"<09:00"}
     st.subheader("They fall furthest behind on the first flights of the day" if first_wave_story
-                 else "When they fall behind")
+                 else "When they fall behind", anchor="f2")
     f1, f2 = st.columns([3, 2], gap="large")
     with f1:
         network_hours = agg.hour_profile(by_time).loc[5:22]
         series = {}
-        for c, color in zip(flagged, [FLAGGED, FLAGGED_2]):
+        for c, color in zip(flagged, FLAGGED_MORE):
             series[short(c)] = (agg.hour_profile(by_time, c).loc[5:22] / network_hours, color, "solid")
         if series:
             profile(series, "Scheduled departure hour (local)", "× network average", reference=1.0, height=320)
@@ -458,7 +477,9 @@ with tab_findings:
             these = {1: "This airline doesn't", 2: "These two don't", 3: "These three don't"}.get(
                 len(flagged), f"These {len(flagged)} don't")
             st.markdown(
-                "Across all airlines, carrier-attributable delay is lowest in the late morning and builds through the "
+                ("**Their biggest gap is before 09:00, when the rest of the network runs close to its best.** "
+                 if widest else "**They lose the most hours before 09:00.** ")
+                + "Across all airlines, carrier-attributable delay is lowest in the late morning and builds through the "
                 f"day. {these} follow that pattern: before 09:00 they run "
                 + " and ".join(f"{fw[c]['vs_network']:.2f}×" for c in flagged)
                 + " the network rate" + (", their widest gap of the day" if widest else "") + ".\n\n"
@@ -471,8 +492,9 @@ with tab_findings:
 
     st.html('<p class="finding-no">FINDING 03</p>')
     flagged_airports = airports.index[airports["flagged"]].tolist()
-    st.subheader("Airports matter much less than airlines")
+    st.subheader("Airports matter much less than airlines", anchor="f3")
     st.markdown(
+        "**Fixing airlines is worth far more than fixing airports.** "
         f"{len(flagged_airports)} of {len(airports)} major airports are flagged "
         f"({', '.join(airport_cities().get(a, a).split(',')[0] for a in flagged_airports) or 'none'}), but together "
         f"they add about {round(airports.loc[flagged_airports, 'excess_hours_per_year'].sum(), -2):,.0f} excess "
@@ -485,9 +507,9 @@ with tab_findings:
                "Airports tab.")
 
     st.html('<p class="finding-no">SO WHAT</p>')
-    st.subheader(f"Fixing the first wave is worth about {round(first_wave, -2):,.0f} hours a year")
+    st.subheader(f"Fixing the first wave is worth about {round(first_wave, -2):,.0f} hours a year", anchor="so-what")
     st.markdown(
-        "If the flagged airlines' pre-09:00 departures ran at the network's pre-09:00 rate, that much carrier-"
+        "**Start with the first flights of the day.** If the flagged airlines' pre-09:00 departures ran at the network's pre-09:00 rate, that much carrier-"
         "attributable delay would disappear, before counting the knock-on delay shown above. The places to look are "
         "overnight maintenance sign-off, crew show-up and aircraft preparation at the stations that launch the "
         "morning bank."
@@ -543,26 +565,24 @@ with tab_airline:
 
     bands = agg.band_table(by_time, code)
     worst_band = bands["vs_network"].idxmax()
-    st.markdown(f"**Gap to the network in each time band.** Worst: **{worst_band}** "
-                f"({bands.loc[worst_band, 'vs_network']:.2f}× the network).")
-    st.dataframe(
-        bands.assign(excess_hours_per_year=bands["excess_hours_per_year"].round()).reset_index().rename(columns={
-            "band": "Scheduled departure", "flights": "Flights", "min_per_flight": "Min per flight",
-            "network_min_per_flight": "Network min per flight", "vs_network": "× network",
-            "excess_hours_per_year": "Excess hours / yr"}),
-        hide_index=True, width="stretch",
-        column_config={
-            "Flights": st.column_config.NumberColumn(format="localized"),
-            "Min per flight": st.column_config.NumberColumn(format="%.1f"),
-            "Network min per flight": st.column_config.NumberColumn(format="%.1f"),
-            "× network": st.column_config.ProgressColumn(format="%.2f×", min_value=0,
-                                                         max_value=float(max(2.0, bands["vs_network"].max()))),
-            "Excess hours / yr": st.column_config.NumberColumn(format="localized"),
-        },
-    )
+    st.markdown(f"**Worst time of day: {worst_band}**, at {bands.loc[worst_band, 'vs_network']:.2f}× the network.")
+    with st.expander("Show the numbers for each time of day"):
+        st.dataframe(
+            bands.assign(excess_hours_per_year=bands["excess_hours_per_year"].round()).reset_index().rename(columns={
+                "band": "Scheduled departure", "flights": "Flights", "min_per_flight": "Min per flight",
+                "network_min_per_flight": "Network min per flight", "vs_network": "× network",
+                "excess_hours_per_year": "Excess hours / yr"}),
+            hide_index=True, width="stretch",
+            column_config={
+                "Flights": st.column_config.NumberColumn(format="localized"),
+                "Min per flight": st.column_config.NumberColumn(format="%.1f"),
+                "Network min per flight": st.column_config.NumberColumn(format="%.1f"),
+                "× network": st.column_config.ProgressColumn(format="%.2f×", min_value=0,
+                                                             max_value=float(max(2.0, bands["vs_network"].max()))),
+                "Excess hours / yr": st.column_config.NumberColumn(format="localized"),
+            },
+        )
 
-    st.markdown(f"**Where is it worst?** {name} against other airlines at the same airport")
-    st.caption("Airports where both this airline and the other airlines have at least 2,000 departures, worst gap first.")
     here = by_airport.assign(mine=by_airport["carrier"] == code)
     g = here.groupby(["origin", "mine"])[["flights", "carrier_delay"]].sum().unstack("mine").dropna()
     min_station = 2_000 // (1 if n_years > 1 else 2)
@@ -576,15 +596,20 @@ with tab_airline:
     station["× others"] = station["Min per flight"] / station["Others at airport"]
     station = station[(station["Departures"] >= min_station) & (station["_others_n"] >= min_station)]
     station = station.drop(columns="_others_n").sort_values("× others", ascending=False).head(10)
-    st.dataframe(
-        station, hide_index=True, width="stretch",
-        column_config={
-            "Departures": st.column_config.NumberColumn(format="localized"),
-            "Min per flight": st.column_config.NumberColumn(format="%.1f"),
-            "Others at airport": st.column_config.NumberColumn(format="%.1f"),
-            "× others": st.column_config.NumberColumn(format="%.2f×"),
-        },
-    )
+    worst3 = ", ".join(f"{a.split(' · ')[0].split(',')[0]} ({x:.1f}×)" for a, x in zip(station["Airport"].head(3), station["× others"].head(3)))
+    st.markdown(f"**Where it's worst:** {worst3}, against other airlines at the same airport." if len(station)
+                else "**Where it's worst:** not enough shared airports to compare.")
+    with st.expander("Show the 10 airports with the biggest gap"):
+        st.caption("Airports where both this airline and the other airlines have at least 2,000 departures.")
+        st.dataframe(
+            station, hide_index=True, width="stretch",
+            column_config={
+                "Departures": st.column_config.NumberColumn(format="localized"),
+                "Min per flight": st.column_config.NumberColumn(format="%.1f"),
+                "Others at airport": st.column_config.NumberColumn(format="%.1f"),
+                "× others": st.column_config.NumberColumn(format="%.2f×"),
+            },
+        )
 
 # ---- airports -------------------------------------------------------------------------
 with tab_airport:
@@ -680,9 +705,60 @@ with tab_whatif:
         "given time count as zero."
     )
 
+# ---- method & report ------------------------------------------------------------------
+with tab_method:
+    st.subheader("How I did it")
+    st.markdown(
+        '<p class="lead">The short version: one public dataset, one measure, and a deliberately strict rule for what '
+        "counts as standing out. Everything on this tab describes the full 2024–2025 data.</p>",
+        unsafe_allow_html=True,
+    )
+    d1, d2 = st.columns([3, 2], gap="large")
+    with d1:
+        st.markdown(
+            "**The data.** The US Department of Transportation's Bureau of Transportation Statistics (BTS) records "
+            "every domestic flight by the larger US airlines, with the cause of every delay of 15 minutes or more. "
+            "I used January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) "
+            "flights have no delay breakdown, so the measures use the 13.8 million completed flights. Only 2 delayed "
+            "flights were missing their cause data.\n\n"
+            "**Why US data.** CAAS/data.gov.sg only publishes aggregate monthly figures for Changi — no flight-level, "
+            "cause-coded delay data is publicly available. BTS is the best public dataset with that level of detail.\n\n"
+            "**The measure.** Carrier-attributable delay minutes per completed flight. BTS splits each delay into five "
+            "causes; *carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, "
+            "baggage). BTS has no separate mechanical field, so I never call it mechanical delay.\n\n"
+            "**What counts as standing out.** An airline or airport is flagged only if it's at least 1.2× the network "
+            "average on all three tests: over the two years, in each year separately, and against other airlines at "
+            "the same airports (or, for an airport, the same airlines elsewhere). That last test stops anyone being "
+            "penalised for flying from difficult airports. Airlines need 50,000+ flights and airports 20,000+ "
+            "departures to be ranked.\n\n"
+            "**Time of day** uses the *scheduled* departure hour, so a late flight doesn't move into a later hour."
+        )
+    with d2:
+        st.markdown("**Checks**")
+        st.markdown(
+            "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both.\n"
+            "- Same result with the **CrowdStrike IT outage** (19–28 July 2024) removed.\n"
+            "- JetBlue looked bad in 2024 (1.54×) but not in 2025 (1.02×), so it isn't flagged."
+        )
+        st.markdown("**Limits**")
+        st.markdown(
+            "- Causes are only recorded for delays of 15+ minutes, and airlines report them themselves.\n"
+            "- Carrier delay mixes maintenance with crew, cleaning and baggage; the data can't separate them.\n"
+            "- Knock-on delay to later flights is recorded as late-arriving aircraft and isn't counted, so the "
+            "savings figures are conservative.\n"
+            "- SkyWest is a regional airline flying for United, Delta, American and Alaska; its numbers are its own "
+            "operation's.\n"
+            "- US domestic flying only; results may not carry over to other markets such as Changi."
+        )
+    st.divider()
+    st.markdown("**The full report** has the method in detail, every supporting table and the robustness checks.")
+    if REPORT_PDF.exists():
+        st.download_button("Download the full report (PDF)", data=REPORT_PDF.read_bytes(),
+                           file_name="where-airlines-lose-time-report.pdf", mime="application/pdf", type="primary")
+    st.caption(f"Built by {AUTHOR} with Python, pandas, Plotly and Streamlit. Airport coordinates: OurAirports.")
+
 st.divider()
 st.caption(
     "Source: US DOT Bureau of Transportation Statistics, Reporting Carrier On-Time Performance. "
-    "Cause minutes are only recorded for flights 15+ minutes late and are self-reported by airlines. "
-    f"Airport coordinates: OurAirports. [Code and method]({REPO_URL})."
+    "Cause minutes are only recorded for flights 15+ minutes late and are self-reported by airlines."
 )

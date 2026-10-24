@@ -61,13 +61,15 @@ to open that airline or airport. The sidebar has a short guide, a glossary and a
 2025). Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison
 airline, dashed grey = network average. The light and dark themes follow the visitor's system setting
 (`.streamlit/config.toml`). Fonts and the map outline are served from `app/static/` (licences in
-`app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`.
+`app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
+has a download button for `report/aviation_delay_report.pdf`, so regenerate that file (`make pdf`) if the analysis changes.
+Picking 2024 or 2025 changes the Findings tab too, with a note that the main conclusion uses both years.
 
 **2-minute demo script**
 
 1. **Front page:** read the standfirst and the departures board. SkyWest and American are the two flagged airlines.
 2. **Finding 01:** the bar chart. Click SkyWest: 1.54× the network, still 1.34× against others at the same airports, in
-   both years. Compare it with Southwest.
+   both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
 3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
 4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
 5. **What if:** the preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or **Evening bank**.

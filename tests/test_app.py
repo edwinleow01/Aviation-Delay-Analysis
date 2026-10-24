@@ -80,3 +80,21 @@ def test_compare_year_and_airport_controls():
     at.session_state["year"] = "Both years"
     at.run()
     assert pull_stats(at)[1] == "2 airlines"
+
+
+def test_single_year_notice_and_back_button():
+    at = run_app()
+    assert not [b for b in at.button if b.label == "Back to both years"]
+    at.session_state["year"] = "2025"
+    at.run()
+    assert any("2025 only" in i.value for i in at.info)
+    next(b for b in at.button if b.label == "Back to both years").click().run()
+    assert at.session_state["year"] == "Both years" and not at.exception
+
+
+def test_method_tab_offers_the_pdf_and_no_code_links():
+    at = run_app()
+    downloads = at.get("download_button")
+    assert len(downloads) == 1 and "full report" in downloads[0].proto.label
+    text = " ".join(m.value for m in at.markdown) + " ".join(c.value for c in at.caption)
+    assert "github.com" not in text.lower()
