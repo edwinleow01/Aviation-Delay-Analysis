@@ -1,5 +1,56 @@
+# Aviation palette: daytime sky (light) and night flight (dark). The site follows the
+# viewer's system setting; visitors can switch it from the ⋮ menu → Settings.
+[server]
+enableStaticServing = true   # serves app/static/ (fonts, US map outline)
+
+[client]
+toolbarMode = "viewer"       # hide the developer Deploy/Rerun items from visitors
+
 [theme]
-primaryColor = "#2a78d6"
+baseRadius = "0.5rem"
+showWidgetBorder = true
+headingFont = "SourceSerif, serif"
+headingFontWeights = [700, 700, 600, 600, 600, 600]
+
+[[theme.fontFaces]]
+family = "SourceSerif"
+url = "app/static/source-serif-4-latin-600-normal.woff2"
+weight = "600"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "SourceSerif"
+url = "app/static/source-serif-4-latin-700-normal.woff2"
+weight = "700"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "JetBrains Mono"
+url = "app/static/jetbrains-mono-latin-500-normal.woff2"
+weight = "500"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "JetBrains Mono"
+url = "app/static/jetbrains-mono-latin-700-normal.woff2"
+weight = "700"
+style = "normal"
+
+[theme.light]
+primaryColor = "#0b63ce"
+backgroundColor = "#f7f9fc"
+secondaryBackgroundColor = "#e9eff8"
+textColor = "#0f1f3d"
+borderColor = "#d3dcea"
+linkColor = "#0b63ce"
+
+[theme.dark]
+primaryColor = "#5aa2ff"
+backgroundColor = "#0b1526"
+secondaryBackgroundColor = "#14243d"
+textColor = "#e8eef7"
+borderColor = "#24385a"
+linkColor = "#7db6ff"
 
 [browser]
 gatherUsageStats = false

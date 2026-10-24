@@ -2,20 +2,20 @@
 
 *Data analytics case study. Same content as `case_study.html`, for pasting into a portfolio site or CMS. Images are in `figures/`.*
 
-*This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is publicly available. BTS was chosen as the best available public dataset with the granularity needed for this kind of analysis.*
+*This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly available. BTS was chosen as the best available public dataset with the granularity needed for this kind of analysis.*
 
 **13.8M** US domestic flights analysed (Jan 2024 – Dec 2025) · **1.3×** SkyWest and American's delay rate vs other airlines at the same airports · **20,600 h** delay a year recoverable by fixing their first flights of the day
 
 ## The problem
 
-Airlines can't control the weather or air traffic. But a third of all delay minutes in US flying (33%) come from causes inside the airline's own operation: maintenance, crew, cleaning, fuelling and baggage. That's where management action actually pays off. The question: **which airports or carriers show disproportionately high carrier-attributable delay, and does time of day or day of week make it worse?**
+Airlines can't control the weather or air traffic. But a third of recorded delay minutes in US flying (33%) come from causes inside the airline's own operation: maintenance, crew, cleaning, fuelling and baggage. That's where management action actually pays off. The question: **which airports or carriers show disproportionately high carrier-attributable delay, and does time of day or day of week make it worse?**
 
 ## Approach
 
 - **Data:** 14.1M flights from the US Bureau of Transportation Statistics, which records the cause of every delay of 15+ minutes. Cancelled and diverted flights are excluded from the delay measures.
 - **Measure:** carrier-attributable delay minutes per flight. It's called *carrier-attributable*, not "mechanical", because BTS records maintenance in the same field as crew, cleaning and baggage.
 - **"Disproportionate"** means at least 1.2× the network average in *each* year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.
-- **Robustness:** re-run without the July 2024 CrowdStrike IT outage. The findings don't change.
+- **Robustness:** re-run without the July 2024 CrowdStrike IT outage. SkyWest and American stay flagged; Frontier, just under the bar in 2024, also crosses it.
 
 ## What I found
 

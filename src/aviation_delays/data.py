@@ -97,6 +97,7 @@ def carrier_label(code: str) -> str:
 
 # City names for origin airports, from the BTS L_AIRPORT lookup table
 # (transtats.bts.gov, Download_Lookup.asp?Y11x72=Y_NVecbeg), limited to airports in the 2024-25 data.
+# Coordinates (lat/lon) from OurAirports (ourairports.com, public domain).
 _AIRPORTS_CSV = Path(__file__).with_name("airport_names.csv")
 
 
@@ -105,6 +106,12 @@ def airport_cities() -> dict[str, str]:
     """Code -> "City, ST" (e.g. "DTW" -> "Detroit, MI")."""
     table = pd.read_csv(_AIRPORTS_CSV, dtype=str)
     return dict(zip(table["code"], table["city"]))
+
+
+@lru_cache(maxsize=1)
+def airport_coords() -> pd.DataFrame:
+    """Code-indexed frame with ``city``, ``lat`` and ``lon``."""
+    return pd.read_csv(_AIRPORTS_CSV, dtype={"code": str}).set_index("code")[["city", "lat", "lon"]]
 
 
 def airport_label(code: str) -> str:

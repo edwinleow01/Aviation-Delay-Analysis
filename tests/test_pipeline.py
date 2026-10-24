@@ -103,3 +103,9 @@ def test_excess_by_band_sums_to_carrier_total():
 def test_airport_labels():
     assert data.airport_label("DTW") == "Detroit, MI · DTW"
     assert data.airport_label("ZZZ") == "ZZZ"
+
+
+def test_airport_coordinates_cover_every_airport():
+    coords = data.airport_coords()
+    assert coords[["lat", "lon"]].notna().all().all()
+    assert coords.loc["DTW", "lat"] == pytest.approx(42.21, abs=0.01)

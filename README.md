@@ -6,7 +6,7 @@ A data analytics case study that ends in a business recommendation, not a dashbo
 > carrier-attributable delay, and does time-of-day or day-of-week make it worse?
 
 This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg
-only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is
+only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is
 publicly available. BTS was chosen as the best available public dataset with the granularity
 needed for this kind of analysis.
 
@@ -14,7 +14,8 @@ needed for this kind of analysis.
 
 - **Carriers:** SkyWest (OO) and American (AA) run 1.54× and 1.38× the network's carrier-attributable
   delay per flight (8.0 and 7.2 min vs 5.2). Both stay ≥ 1.3× against other airlines at the same airports,
-  in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed.
+  in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed (which also lifts Frontier,
+  just under the bar in 2024, over it).
 - **Airports:** Detroit (DTW), Madison (MSN) and Des Moines (DSM) are flagged. The airport effect is much smaller
   than the carrier effect (about 5.6k vs 68k excess delay hours a year).
 - **Time:** across the network, carrier-attributable delay is 2.0× higher at 22:00 than at 10:00. Sunday is
@@ -52,15 +53,29 @@ downloading the BTS data. After rebuilding the dataset, refresh them with `make 
 `tests/test_aggregates.py` and `tests/test_app.py` check that the app reproduces the report's numbers.
 To put it online, deploy `app/streamlit_app.py` on Streamlit Community Cloud (it uses `app/requirements.txt`).
 
+Live app: **https://edwinleow-aviation-delays.streamlit.app/**
+
+**Using it.** The front page reads like a short article: three findings, each with a chart, a departures-board
+graphic of the airline ranking, a map of US airports and a diagram of how one late morning flight spreads delay
+through an aircraft's day. The "Start with a question" links and every chart are clickable: click a bar or a map dot
+to open that airline or airport. The sidebar has a short guide, a glossary and a period switch (both years, 2024,
+2025). Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison
+airline, dashed grey = network average. The light and dark themes follow the visitor's system setting
+(`.streamlit/config.toml`). Fonts and the map outline are served from `app/static/` (licences in
+`app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
+has a download button for `report/aviation_delay_report.pdf`, so regenerate that file (`make pdf`) if the analysis changes.
+Picking 2024 or 2025 changes the Findings tab too, with a note that the main conclusion uses both years.
+
 **2-minute demo script**
 
-1. **Overview:** network average 5.2 min per flight; 2 airlines flagged; the first-wave fix is worth 20,600 h a year.
-2. **Airline explorer → SkyWest:** 1.54× the network, still 1.34× against others at the same airports, in both years.
-   The hour chart shows the gap is widest early in the morning. The bottom table shows where it's worst
-   (Midland/Odessa, Nashville, LaGuardia, …).
-3. **Airport explorer → Detroit:** the most delay of any major airport, and much of it is SkyWest (13.7 min per departure there).
-4. **What-if calculator:** the defaults give the report's 20,600 h. Drag the slider to 50% for 10,300 h,
-   or add the 17–21 band to show the evening opportunity.
+1. **Front page:** read the standfirst and the departures board. SkyWest and American are the two flagged airlines.
+2. **Finding 01:** the bar chart. Click SkyWest: 1.54× the network, still 1.34× against others at the same airports, in
+   both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
+3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
+4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
+5. **What if:** the preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or **Evening bank**.
+   Switching the period to 2024 or 2025 keeps SkyWest and American flagged. A single year can't apply the every-year
+   test, so it also flags a few airlines that only stood out that year (JetBlue in 2024; PSA and Frontier in 2025).
 
 ## Getting the source data
 
@@ -96,7 +111,7 @@ Cancelled, Diverted, CarrierDelay, WeatherDelay, NASDelay, SecurityDelay, LateAi
 
 ```
 src/aviation_delays/   data.py (load/clean), metrics.py, charts.py, aggregates.py (app tables), airport_names.csv
-app/                   streamlit_app.py, aggregates/ (small summary tables), requirements.txt
+app/                   streamlit_app.py, aggregates/ (summary tables), static/ (fonts, map), assets/ (your photo)
 scripts/               download_bts.py, build_dataset.py, build_app_data.py
 notebooks/             01_data_check.ipynb, 02_analysis.ipynb
 report/                exported HTML report + figures (generated)
