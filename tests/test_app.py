@@ -22,13 +22,21 @@ def metrics(at):
     return {m.label: m.value for m in at.metric}
 
 
+def pull_stats(at):
+    """The headline numbers on the Findings tab (custom HTML)."""
+    import re
+
+    bodies = [h.proto.body for h in at.get("html")]
+    return [re.search(r'class="pull">([^<]+)<', b).group(1) for b in bodies if 'class="pull"' in b]
+
+
 def test_defaults_match_report():
     at = run_app()
-    assert at.title[0].value == "✈️ Where airlines lose time"
-    values = metrics(at)
-    assert values["Airlines flagged"] == "2"
-    assert values["First-wave fix (flagged airlines)"] == "20,600 h / yr"
-    assert values["Carrier-attributable delay removed"] == "20,600 hours a year"
+    assert at.title[0].value == "Where airlines lose time"
+    assert pull_stats(at) == ["5.2 min", "2 airlines", "20,600 h"]
+    assert metrics(at)["Carrier-attributable delay removed"] == "20,600 hours a year"
+    board = next(h.proto.body for h in at.get("html") if "DEPARTURES" in h.proto.body)
+    assert board.count("FLAGGED") == 2 and "SKYWEST" in board
     assert at.session_state["airline"] == "OO"  # worst airline is preselected
 
 
@@ -36,13 +44,13 @@ def test_quick_start_buttons_open_the_right_tab():
     at = run_app()
     labels = [b.label for b in at.button]
     at.button[[i for i, label in enumerate(labels) if "worst airline" in label][0]].click().run()
-    assert at.session_state["tab"] == "Airline explorer" and at.session_state["airline"] == "OO"
+    assert at.session_state["tab"] == "Airlines" and at.session_state["airline"] == "OO"
 
     at.button[[i for i, label in enumerate(labels) if "going wrong" in label][0]].click().run()
-    assert at.session_state["tab"] == "Airport explorer" and at.session_state["airport"] == "DTW"
+    assert at.session_state["tab"] == "Airports" and at.session_state["airport"] == "DTW"
 
-    at.button[[i for i, label in enumerate(labels) if "fix be worth" in label][0]].click().run()
-    assert at.session_state["tab"] == "What-if calculator"
+    at.button[[i for i, label in enumerate(labels) if "fixing it be worth" in label][0]].click().run()
+    assert at.session_state["tab"] == "What if"
     assert metrics(at)["Carrier-attributable delay removed"] == "20,600 hours a year"
     assert not at.exception
 
@@ -71,4 +79,4 @@ def test_compare_year_and_airport_controls():
         assert not at.exception
     at.session_state["year"] = "Both years"
     at.run()
-    assert metrics(at)["Airlines flagged"] == "2"
+    assert pull_stats(at)[1] == "2 airlines"

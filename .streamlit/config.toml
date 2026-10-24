@@ -1,9 +1,40 @@
 # Aviation palette: daytime sky (light) and night flight (dark). The site follows the
-# viewer's system setting; both can be switched from the app's ⋮ menu → Settings.
+# viewer's system setting; visitors can switch it from the ⋮ menu → Settings.
+[server]
+enableStaticServing = true   # serves app/static/ (fonts, US map outline)
+
+[client]
+toolbarMode = "viewer"       # hide the developer Deploy/Rerun items from visitors
+
 [theme]
-baseRadius = "0.6rem"
+baseRadius = "0.5rem"
 showWidgetBorder = true
-headingFontWeights = [700, 600, 600, 600, 600, 600]
+headingFont = "SourceSerif, serif"
+headingFontWeights = [700, 700, 600, 600, 600, 600]
+
+[[theme.fontFaces]]
+family = "SourceSerif"
+url = "app/static/source-serif-4-latin-600-normal.woff2"
+weight = "600"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "SourceSerif"
+url = "app/static/source-serif-4-latin-700-normal.woff2"
+weight = "700"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "JetBrains Mono"
+url = "app/static/jetbrains-mono-latin-500-normal.woff2"
+weight = "500"
+style = "normal"
+
+[[theme.fontFaces]]
+family = "JetBrains Mono"
+url = "app/static/jetbrains-mono-latin-700-normal.woff2"
+weight = "700"
+style = "normal"
 
 [theme.light]
 primaryColor = "#0b63ce"
