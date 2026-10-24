@@ -52,15 +52,26 @@ downloading the BTS data. After rebuilding the dataset, refresh them with `make 
 `tests/test_aggregates.py` and `tests/test_app.py` check that the app reproduces the report's numbers.
 To put it online, deploy `app/streamlit_app.py` on Streamlit Community Cloud (it uses `app/requirements.txt`).
 
+Live app: **https://edwinleow-aviation-delays.streamlit.app/**
+
+**Using it.** The sidebar has step-by-step instructions, a glossary and a period switch (both years, 2024, 2025).
+The "New here?" buttons jump straight to the main findings. Click any bar to open that airline or airport.
+Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison airline,
+dashed grey = network average. The light and dark themes follow the visitor's system setting
+(`.streamlit/config.toml`).
+
 **2-minute demo script**
 
 1. **Overview:** network average 5.2 min per flight; 2 airlines flagged; the first-wave fix is worth 20,600 h a year.
+   Click the SkyWest bar.
 2. **Airline explorer → SkyWest:** 1.54× the network, still 1.34× against others at the same airports, in both years.
-   The hour chart shows the gap is widest early in the morning. The bottom table shows where it's worst
-   (Midland/Odessa, Nashville, LaGuardia, …).
-3. **Airport explorer → Detroit:** the most delay of any major airport, and much of it is SkyWest (13.7 min per departure there).
-4. **What-if calculator:** the defaults give the report's 20,600 h. Drag the slider to 50% for 10,300 h,
-   or add the 17–21 band to show the evening opportunity.
+   Compare it with Southwest. The hour chart shows SkyWest's gap is widest early in the morning; the bottom table shows
+   where it's worst (Midland/Odessa, Nashville, LaGuardia, …).
+3. **"What's going wrong at Detroit?"** The most delay of any major airport, and SkyWest stands out there at 13.7 min per departure.
+4. **"What would the fix be worth?"** The preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or
+   **Evening bank**, or switch the period to 2024 or 2025: SkyWest and American stay flagged in each year on its own. A single year
+   can't apply the every-year test, so it also flags a few airlines that only stood out that year
+   (JetBlue in 2024; PSA and Frontier in 2025).
 
 ## Getting the source data
 
