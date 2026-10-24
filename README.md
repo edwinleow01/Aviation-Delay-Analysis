@@ -6,7 +6,7 @@ A data analytics case study that ends in a business recommendation, not a dashbo
 > carrier-attributable delay, and does time-of-day or day-of-week make it worse?
 
 This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg
-only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is
+only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is
 publicly available. BTS was chosen as the best available public dataset with the granularity
 needed for this kind of analysis.
 
@@ -14,7 +14,8 @@ needed for this kind of analysis.
 
 - **Carriers:** SkyWest (OO) and American (AA) run 1.54× and 1.38× the network's carrier-attributable
   delay per flight (8.0 and 7.2 min vs 5.2). Both stay ≥ 1.3× against other airlines at the same airports,
-  in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed.
+  in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed (which also lifts Frontier,
+  just under the bar in 2024, over it).
 - **Airports:** Detroit (DTW), Madison (MSN) and Des Moines (DSM) are flagged. The airport effect is much smaller
   than the carrier effect (about 5.6k vs 68k excess delay hours a year).
 - **Time:** across the network, carrier-attributable delay is 2.0× higher at 22:00 than at 10:00. Sunday is

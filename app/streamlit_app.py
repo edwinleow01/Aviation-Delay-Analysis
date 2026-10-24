@@ -363,10 +363,12 @@ def pick_from_chart(chart_key: str, codes_by_label: dict[str, str], action) -> N
 with st.sidebar:
     st.subheader("Getting around")
     st.markdown(
-        "**Findings** tells the story in three charts. **Airlines** and **Airports** let you dig into any one of "
-        "them; click a bar or a dot on the map to jump there. **What if** works out what a fix would be worth. "
-        "**Method & report** explains how it was done and has the full report as a PDF.\n\n"
-        "Hover over a chart for exact numbers. Short on time? Read just the bold lines on the Findings tab."
+        "- **Findings**: the story in three charts. Short on time? Read just the bold lines.\n"
+        "- **Airlines**: pick any airline, and one to compare it with.\n"
+        "- **Airports**: pick any airport, or click a dot on the map.\n"
+        "- **What if**: see what a fix would be worth.\n"
+        "- **Method & report**: how it was done, plus the full report as a PDF.\n\n"
+        "Click any bar or map dot to jump to that airline or airport. Hover over a chart for exact numbers."
     )
     st.segmented_control("Period", YEAR_OPTIONS, key="year", help="Both years together, or one year on its own.")
     with st.expander("What the numbers mean"):
@@ -385,7 +387,7 @@ with st.sidebar:
     st.caption(
         f"Built by {AUTHOR} with Python, pandas and Streamlit.\n\n"
         "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. I used BTS because CAAS/data.gov.sg "
-        "only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is publicly "
+        "only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly "
         "available."
     )
 
@@ -396,7 +398,7 @@ with left:
     st.html(f'<p class="kicker">Case study · US aviation · {period} · 3-minute read</p>')
     st.title("Where airlines lose time")
     st.html(
-        '<p class="standfirst">Weather and air traffic get the blame for late flights, but a third of delay minutes '
+        '<p class="standfirst">Weather and air traffic get the blame for late flights, but a third of recorded delay minutes '
         "come from inside the airline: maintenance, crew, cleaning, fuelling, baggage. I went through 13.8 million US "
         "flights to find out which airlines and airports lose the most time this way, and when it happens.</p>"
         f'<p class="byline">By {AUTHOR} · Data: US DOT Bureau of Transportation Statistics</p>'
@@ -503,14 +505,14 @@ with tab_findings:
     )
     airport_map("findings_map")
     st.caption("Bubble size = departures. Colour = carrier-attributable delay against the network (blue better, "
-               "orange worse). Labelled = flagged. Puerto Rico and other territories aren't on the map; see the "
-               "Airports tab.")
+               "orange worse). Labelled = flagged. San Juan, Puerto Rico isn't on the map; pick it from the list "
+               "on the Airports tab.")
 
     st.html('<p class="finding-no">SO WHAT</p>')
     st.subheader(f"Fixing the first wave is worth about {round(first_wave, -2):,.0f} hours a year", anchor="so-what")
     st.markdown(
         "**Start with the first flights of the day.** If the flagged airlines' pre-09:00 departures ran at the network's pre-09:00 rate, that much carrier-"
-        "attributable delay would disappear, before counting the knock-on delay shown above. The places to look are "
+        "attributable delay would disappear, before counting the knock-on delay shown above. Likely places to look are "
         "overnight maintenance sign-off, crew show-up and aircraft preparation at the stations that launch the "
         "morning bank."
     )
@@ -523,7 +525,7 @@ with tab_airline:
     a1.selectbox("Airline", options, key="airline", format_func=carrier_label)
     code = st.session_state["airline"]
     a2.selectbox("Compare with (optional)", [None] + [c for c in options if c != code], key="compare",
-                 format_func=lambda c: "— none —" if c is None else carrier_label(c), placeholder="— none —")
+                 format_func=lambda c: "None" if c is None else carrier_label(c), placeholder="None")
     compare = st.session_state["compare"]
     row = carriers.loc[code]
     name = short(code)
@@ -721,7 +723,7 @@ with tab_method:
             "I used January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) "
             "flights have no delay breakdown, so the measures use the 13.8 million completed flights. Only 2 delayed "
             "flights were missing their cause data.\n\n"
-            "**Why US data.** CAAS/data.gov.sg only publishes aggregate monthly figures for Changi — no flight-level, "
+            "**Why US data.** CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, "
             "cause-coded delay data is publicly available. BTS is the best public dataset with that level of detail.\n\n"
             "**The measure.** Carrier-attributable delay minutes per completed flight. BTS splits each delay into five "
             "causes; *carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, "
@@ -737,7 +739,9 @@ with tab_method:
         st.markdown("**Checks**")
         st.markdown(
             "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both.\n"
-            "- Same result with the **CrowdStrike IT outage** (19–28 July 2024) removed.\n"
+            "- With the **CrowdStrike IT outage** (19–28 July 2024) removed, SkyWest and American stay flagged. Frontier, "
+            "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the "
+            "network average up.\n"
             "- JetBlue looked bad in 2024 (1.54×) but not in 2025 (1.02×), so it isn't flagged."
         )
         st.markdown("**Limits**")

@@ -81,7 +81,7 @@
   <h1>Where airlines lose time</h1>
   <p class="dek">Which US carriers and airports have more delay within their own control than everyone else, and when does it happen?</p>
 
-  <p class="note">This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg only publishes aggregate monthly figures for Changi — no flight-level, cause-coded delay data is publicly available. BTS was chosen as the best available public dataset with the granularity needed for this kind of analysis.</p>
+  <p class="note">This analysis uses US DOT (BTS) flight data rather than Singapore data, since CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly available. BTS was chosen as the best available public dataset with the granularity needed for this kind of analysis.</p>
 
   <div class="stats">
     <div class="stat"><b>13.8M</b><span>US domestic flights analysed, Jan 2024 – Dec 2025</span></div>
@@ -90,14 +90,14 @@
   </div>
 
   <h2>The problem</h2>
-  <p>Airlines can't control the weather or air traffic. But a third of all delay minutes in US flying (33%) come from causes inside the airline's own operation: maintenance, crew, cleaning, fuelling and baggage. That's where management action actually pays off. The question: <strong>which airports or carriers show disproportionately high carrier-attributable delay, and does time of day or day of week make it worse?</strong></p>
+  <p>Airlines can't control the weather or air traffic. But a third of recorded delay minutes in US flying (33%) come from causes inside the airline's own operation: maintenance, crew, cleaning, fuelling and baggage. That's where management action actually pays off. The question: <strong>which airports or carriers show disproportionately high carrier-attributable delay, and does time of day or day of week make it worse?</strong></p>
 
   <h2>Approach</h2>
   <ul>
     <li><strong>Data:</strong> 14.1M flights from the US Bureau of Transportation Statistics, which records the cause of every delay of 15+ minutes. Cancelled and diverted flights are excluded from the delay measures.</li>
     <li><strong>Measure:</strong> carrier-attributable delay minutes per flight. It's called <em>carrier-attributable</em>, not "mechanical", because BTS records maintenance in the same field as crew, cleaning and baggage.</li>
     <li><strong>"Disproportionate"</strong> means at least 1.2× the network average in <em>each</em> year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.</li>
-    <li><strong>Robustness:</strong> re-run without the July 2024 CrowdStrike IT outage. The findings don't change.</li>
+    <li><strong>Robustness:</strong> re-run without the July 2024 CrowdStrike IT outage. SkyWest and American stay flagged; Frontier, just under the bar in 2024, also crosses it.</li>
   </ul>
 
   <h2>What I found</h2>
