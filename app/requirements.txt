@@ -1,4 +1,4 @@
 # Minimal dependencies for deploying the app (e.g. Streamlit Community Cloud).
-streamlit>=1.40
+streamlit>=1.65  # tabs with state, light/dark theme sections and font faces
 pandas>=2.2
 plotly>=5.20
