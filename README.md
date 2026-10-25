@@ -13,14 +13,14 @@ needed for this kind of analysis.
 ## Result (BTS Jan 2024 – Dec 2025, 13.8M completed flights)
 
 - **Carriers:** SkyWest (OO) and American (AA) run 1.54× and 1.38× the network's carrier-attributable
-  delay per flight (8.0 and 7.2 min vs 5.2). Both stay ≥ 1.3× against other airlines at the same airports,
+  delay per flight (8.0 and 7.2 min vs 5.2). Both stay ≥ 1.3× the rate of other airlines at the same airports,
   in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed (which also lifts Frontier,
   just under the bar in 2024, over it).
 - **Airports:** Detroit (DTW), Madison (MSN) and Des Moines (DSM) are flagged. The airport effect is much smaller
   than the carrier effect (about 5.6k vs 68k excess delay hours a year).
 - **Time:** across the network, carrier-attributable delay is 2.0× higher at 22:00 than at 10:00. Sunday is
   the worst day and Wednesday the best. For both flagged carriers the gap is widest **before 09:00** (1.76× and 1.51× the network).
-- **Recommendation:** SkyWest and American should fix first-wave (pre-09:00) departure readiness. Matching the network's
+- **Recommendation:** SkyWest and American should fix the delays on their first flights of the day (before 09:00). Matching the network's
   pre-09:00 rate would remove about **20,600 carrier-attributable delay hours a year**.
 
 - **Portfolio case study (2-minute read):** [`report/case_study.html`](report/case_study.html), with the same text in
@@ -75,7 +75,7 @@ Picking 2024 or 2025 changes the Findings tab too, with a note that the main con
    both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
 3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
 4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
-5. **What if:** the preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or **Evening bank**.
+5. **What if:** the preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or **Evening (17:00–21:00)**.
    Switching the period to 2024 or 2025 keeps SkyWest and American flagged. A single year can't apply the every-year
    test, so it also flags a few airlines that only stood out that year (JetBlue in 2024; PSA and Frontier in 2025).
 

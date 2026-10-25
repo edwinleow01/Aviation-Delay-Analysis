@@ -3,7 +3,7 @@
 <html lang="en">
 <head><meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>02_analysis</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
+<title>Where airlines lose time</title><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.1.10/require.min.js"></script>
 <style type="text/css">
     pre { line-height: 125%; }
 td.linenos .normal { color: inherit; background-color: transparent; padding-left: 5px; padding-right: 5px; }
@@ -7871,13 +7871,13 @@ body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 <div class="jp-OutputArea-child">
 <div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-OutputArea-output" data-mime-type="text/markdown" tabindex="0">
 <h2 id="Summary">Summary<a class="anchor-link" href="#Summary">¶</a></h2><p><strong>SkyWest (OO) and American (AA)</strong> have disproportionately high carrier-attributable delay: 8.0 and 7.2 minutes per flight,
-against a network average of 5.2. They stay at least 1.3× the rate
-of other airlines flying from the same airports, in 2024 and 2025 separately.</p>
+against a network average of 5.2. They're at least 1.3× the rate
+of other airlines flying from the same airports, and at least 1.3× the network in 2024 and 2025 separately.</p>
 <p><strong>Time of day makes it worse.</strong> Across the network, carrier-attributable delay per flight is 2.0× higher
 at 22:00 than at 10:00, and Sunday is the worst day of the week. But for both flagged carriers the
 biggest excess is in the <strong>first wave</strong>: departures scheduled before 09:00.</p>
-<p><strong>Recommendation:</strong> SkyWest (OO) and American (AA) should target first-wave departure readiness. Bringing their
-pre-09:00 departures down to the network's pre-09:00 rate would remove about <strong>20,600 carrier-attributable
+<p><strong>Recommendation:</strong> SkyWest (OO) and American (AA) should fix the delays on their first flights of the day, the ones scheduled
+before 09:00. Bringing those down to the network's pre-09:00 rate would remove about <strong>20,600 carrier-attributable
 delay hours a year</strong>. That is before counting the knock-on delay those early flights pass to the rest of the day.</p>
 </div>
 </div>
@@ -7934,7 +7934,7 @@ For example, JetBlue's rate fell from 1.54× in 2024 to 1.02× in 2025.</p>
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <div style="break-before: page"></div>
-<h2 id="2-%C2%B7-Airports">2 · Airports<a class="anchor-link" href="#2-%C2%B7-Airports">¶</a></h2><p>Grouped by <strong>origin</strong> airport, where the delay was incurred.</p>
+<h2 id="2-%C2%B7-Airports">2 · Airports<a class="anchor-link" href="#2-%C2%B7-Airports">¶</a></h2><p>Grouped by <strong>origin</strong> airport: where the delayed flight was due to leave from.</p>
 </div>
 </div>
 </div>
@@ -8004,7 +8004,7 @@ add up to 5,600 excess hours a year, against
 (3.9 min per flight at 10:00) and climbs through the afternoon and evening to 8.0 min at 22:00.
 Sunday (6.0 min) is the worst day and
 Wednesday (4.5) the best. The weekday effect is smaller than the hour-of-day effect.</p>
-<p>For the flagged carriers, the gap over the network is widest early in the day, when the network itself runs close to its best.
+<p>The flagged carriers follow the same shape but sit above the network at every hour, and their gap is widest early in the day, when the network as a whole runs better than its daily average.
 Before 09:00 they run 1.76× and 1.51× the network rate.
 That band is 21% and 26% of their flights
 but 28% and 33% of their excess delay hours. Most of these flights start the day
@@ -8063,9 +8063,9 @@ from an overnight position. That points at readiness (maintenance sign-off, crew
 network rate would remove about <strong>20,600 delay hours a year</strong>
 (SkyWest (OO) 10,300, American (AA) 10,300).
 Likely places to look, which BTS can't separate: overnight maintenance sign-off, crew show-up and aircraft readiness
-(cleaning, catering, fuelling) at the stations that launch the first wave. All of these are inside the airline's control, which is what this metric measures.</p>
+(cleaning, catering, fuelling) at the airports where their first flights of the day leave from. All of these are inside the airline's control, which is what this metric measures.</p>
 <p>The number is conservative. A late first departure pushes delay onto later flights, and BTS books that as
-<em>late-arriving aircraft</em> delay (40% of all delay minutes), which is not counted here.</p>
+<em>late-arriving aircraft</em> delay (40% of all recorded delay minutes), which is not counted here.</p>
 </div>
 </div>
 </div>
@@ -8087,8 +8087,8 @@ Likely places to look, which BTS can't separate: overnight maintenance sign-off,
 <h2 id="Future-work-(out-of-scope-for-this-pass)">Future work (out of scope for this pass)<a class="anchor-link" href="#Future-work-(out-of-scope-for-this-pass)">¶</a></h2><ul>
 <li>Weather delay by airport and season</li>
 <li>Route and distance effects</li>
-<li>Station-level first-wave analysis for the flagged carriers (which origin airports drive the pre-09:00 excess)</li>
-<li>Predicting carrier-attributable delay; an interactive dashboard (Streamlit)</li>
+<li>Airport by airport, which of the flagged airlines' early departures drive the pre-09:00 gap</li>
+<li>Predicting carrier-attributable delay</li>
 </ul>
 </div>
 </div>

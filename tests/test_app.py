@@ -61,7 +61,7 @@ def test_what_if_presets_and_slider():
     assert metrics(at)["Carrier-attributable delay removed"] == "10,300 hours a year"
     assert at.session_state["wi_preset"] is None  # moving a control leaves the preset
 
-    at.session_state["wi_preset"] = "Report recommendation"
+    at.session_state["wi_preset"] = "The recommendation"
     at.run()
     at.slider(key="wi_close").set_value(100).run()
     assert metrics(at)["Carrier-attributable delay removed"] == "20,600 hours a year"
