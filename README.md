@@ -60,10 +60,12 @@ graphic of the airline ranking, a map of US airports and a diagram of how one la
 through an aircraft's day. The "Start with a question" links and every chart are clickable: click a bar or a map dot
 to open that airline or airport. The sidebar has a short guide, a glossary and a period switch (both years, 2024,
 2025). Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison
-airline, dashed grey = network average. The light and dark themes follow the visitor's system setting
-(`.streamlit/config.toml`). Fonts and the map outline are served from `app/static/` (licences in
+airline, dashed grey = network average. The light and dark themes (`.streamlit/config.toml`) follow the
+visitor's device by default; the sidebar's **Appearance** switch lets them pick Light or Dark, and the choice
+is remembered in their browser. Fonts and the map outline are served from `app/static/` (licences in
 `app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
-has a download button for `report/aviation_delay_report.pdf`, so regenerate that file (`make pdf`) if the analysis changes.
+has a download button for `report/aviation_delay_report.pdf` (A4, page-numbered, appendix tables sized to fit),
+so regenerate that file (`make pdf`) if the analysis changes.
 Picking 2024 or 2025 changes the Findings tab too, with a note that the main conclusion uses both years.
 
 **2-minute demo script**
