@@ -91,7 +91,7 @@ YEAR_OPTIONS = [BOTH] + [str(y) for y in all_years]
 
 # ---- session state & actions ----------------------------------------------------------
 defaults = {"year": BOTH, "tab": TABS[0], "airline": None, "compare": None, "airport": None,
-            "wi_airlines": None, "wi_bands": ["<09:00"], "wi_close": 100, "wi_preset": "Report recommendation"}
+            "wi_airlines": None, "wi_bands": ["<09:00"], "wi_close": 100, "wi_preset": "The recommendation"}
 for k, v in defaults.items():
     st.session_state.setdefault(k, v)
 if st.session_state["year"] is None:  # segmented control can be cleared
@@ -130,8 +130,8 @@ def open_airport(code: str) -> None:
 
 
 PRESETS = {
-    "Report recommendation": (["<09:00"], 100),
-    "Evening bank": (["17–21"], 100),
+    "The recommendation": (["<09:00"], 100),
+    "Evening (17:00–21:00)": (["17–21"], 100),
     "All day": (list(TIME_BANDS), 100),
     "Halfway there": (["<09:00"], 50),
 }
@@ -147,13 +147,30 @@ def apply_preset() -> None:
 
 
 def run_recommendation() -> None:
-    st.session_state["wi_preset"] = "Report recommendation"
+    st.session_state["wi_preset"] = "The recommendation"
     apply_preset()
     st.session_state["tab"] = "What if"
 
 
 def custom_preset() -> None:
     st.session_state["wi_preset"] = None
+
+
+BAND_WORDS = {"<09:00": "before 09:00", "09–13": "09:00–13:00", "13–17": "13:00–17:00", "17–21": "17:00–21:00",
+              "21+": "after 21:00"}
+
+
+def joined(items: list[str]) -> str:
+    return items[0] if len(items) == 1 else ", ".join(items[:-1]) + " and " + items[-1]
+
+
+def higher_lower(ratio: float) -> str:
+    """'54% higher' / '12% lower' / 'about the same'."""
+    if ratio >= 1.05:
+        return f"{ratio - 1:.0%} higher"
+    if ratio <= 0.95:
+        return f"{1 - ratio:.0%} lower"
+    return "about the same"
 
 
 def compare_word(ratio: float) -> str:
@@ -213,8 +230,9 @@ def departures_board(rows: pd.DataFrame, title: str, limit: int = 8) -> str:
 
 
 def rotation_diagram() -> str:
-    """Illustration: one aircraft's day, showing why a late first departure is undercounted."""
-    x0, x1, t0, t1 = 70, 740, 5.5, 15.5  # px range and hours shown
+    """Illustration: one aircraft's day, showing why a late first departure is undercounted.
+    Text is sized to stay readable when the drawing is scaled down to phone width."""
+    x0, x1, t0, t1 = 84, 750, 5.6, 15.4  # px range and hours shown
 
     def x(h: float) -> float:
         return x0 + (h - t0) / (t1 - t0) * (x1 - x0)
@@ -223,39 +241,40 @@ def rotation_diagram() -> str:
     delays = [25, 20, 10, 0]  # minutes late at departure
     parts = []
     for h in range(6, 16, 2):
-        parts.append(f'<line x1="{x(h):.1f}" y1="34" x2="{x(h):.1f}" y2="178" class="grid"/>'
-                     f'<text x="{x(h):.1f}" y="196" class="tick">{h:02d}:00</text>')
+        parts.append(f'<line x1="{x(h):.1f}" y1="34" x2="{x(h):.1f}" y2="206" class="grid"/>'
+                     f'<text x="{x(h):.1f}" y="230" class="tick">{h:02d}:00</text>')
     for (dep, arr, name), late in zip(legs, delays):
-        parts.append(f'<rect x="{x(dep):.1f}" y="48" width="{x(arr) - x(dep):.1f}" height="26" rx="4" class="sched"/>'
-                     f'<text x="{(x(dep) + x(arr)) / 2:.1f}" y="65" class="leg">{name}</text>')
-        s = dep + late / 60
-        e = arr + late / 60
-        parts.append(f'<rect x="{x(s):.1f}" y="110" width="{x(e) - x(s):.1f}" height="26" rx="4" class="actual"/>')
+        parts.append(f'<rect x="{x(dep):.1f}" y="40" width="{x(arr) - x(dep):.1f}" height="34" rx="5" class="sched"/>'
+                     f'<text x="{(x(dep) + x(arr)) / 2:.1f}" y="63" class="leg">{name}</text>')
+        s_, e_ = dep + late / 60, arr + late / 60
+        parts.append(f'<rect x="{x(s_):.1f}" y="104" width="{x(e_) - x(s_):.1f}" height="34" rx="5" class="actual"/>')
         if late:
             cls = "carrier" if late == 25 else "knock"
-            parts.append(f'<rect x="{x(dep):.1f}" y="110" width="{x(s) - x(dep):.1f}" height="26" rx="3" class="{cls}"/>')
-            label = "+25 min carrier delay" if late == 25 else f"+{late} min knock-on"
-            parts.append(f'<text x="{x(dep):.1f}" y="156" class="note {cls}-t">{label}</text>')
+            parts.append(f'<rect x="{x(dep):.1f}" y="104" width="{x(s_) - x(dep):.1f}" height="34" rx="4" class="{cls}"/>')
+            line2 = "carrier delay" if late == 25 else "knock-on"
+            parts.append(f'<text x="{x(dep):.1f}" y="164" class="note {cls}-t">+{late} min</text>'
+                         f'<text x="{x(dep):.1f}" y="184" class="note {cls}-t">{line2}</text>')
         else:
-            parts.append(f'<text x="{x(dep):.1f}" y="156" class="note">back on time</text>')
-    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 210" width="760" height="210" role="img" aria-labelledby="rot-t rot-d" style="color:#7d8a9e;font-family:'Source Sans Pro','Source Sans 3',Arial,sans-serif">
+            parts.append(f'<text x="{x(dep):.1f}" y="164" class="note">back on</text>'
+                         f'<text x="{x(dep):.1f}" y="184" class="note">time</text>')
+    return f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 244" width="760" height="244" role="img" aria-labelledby="rot-t rot-d" style="color:#7d8a9e;font-family:'Source Sans Pro','Source Sans 3',Arial,sans-serif">
   <title id="rot-t">One aircraft's day</title>
   <desc id="rot-d">A crew problem delays the first departure by 25 minutes. The aircraft then leaves 20 and 10 minutes
   late on its next two flights before turn-time buffers absorb the delay.</desc>
   <style>
     .grid {{ stroke: currentColor; stroke-opacity: .25; }}
-    .tick {{ fill: currentColor; fill-opacity: 1; font-size: 13px; text-anchor: middle; }}
-    .lane {{ fill: currentColor; fill-opacity: 1; font-size: 14px; font-weight: 600; }}
-    .sched {{ fill: none; stroke: currentColor; stroke-opacity: .45; stroke-dasharray: 4 3; }}
+    .tick {{ fill: currentColor; font-size: 16px; text-anchor: middle; }}
+    .lane {{ fill: currentColor; font-size: 18px; font-weight: 600; }}
+    .sched {{ fill: none; stroke: currentColor; stroke-opacity: .5; stroke-dasharray: 5 4; }}
     .actual {{ fill: {SELECTED}; fill-opacity: .85; }}
     .carrier {{ fill: {FLAGGED}; }}
     .knock {{ fill: {NEUTRAL}; }}
-    .leg {{ fill: currentColor; fill-opacity: 1; font-size: 12px; text-anchor: middle; }}
-    .note {{ fill: currentColor; fill-opacity: 1; font-size: 13px; }}
-    .carrier-t {{ fill: {FLAGGED}; fill-opacity: 1; font-weight: 600; }}
+    .leg {{ fill: currentColor; font-size: 15px; text-anchor: middle; }}
+    .note {{ fill: currentColor; font-size: 16px; }}
+    .carrier-t {{ fill: {FLAGGED}; font-weight: 700; }}
   </style>
-  <text x="0" y="66" class="lane">Plan</text>
-  <text x="0" y="128" class="lane">Actual</text>
+  <text x="0" y="63" class="lane">Plan</text>
+  <text x="0" y="127" class="lane">Actual</text>
   {''.join(parts)}
 </svg>"""
 
@@ -263,7 +282,7 @@ def rotation_diagram() -> str:
 ROTATION_CAPTION = (
     "Illustration, not real flight data. A crew problem holds the first departure for 25 minutes; BTS books that as "
     "**carrier delay**. The same aircraft then leaves 20 and 10 minutes late on its next flights, which BTS books as "
-    "**late-arriving aircraft**, so this analysis doesn't count them. Fixing the first wave fixes those too."
+    "**late-arriving aircraft**, so this analysis doesn't count them. Preventing the first delay would prevent those too."
 )
 
 
@@ -295,7 +314,8 @@ def hbar(df: pd.DataFrame, labels: list[str], flagged_codes: set[str], xlabel: s
 
 
 def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title: str = "min per flight",
-            ticktext: list[str] | None = None, reference: float | None = None, height: int = 340):
+            ticktext: list[str] | None = None, reference: float | None = None, height: int = 340,
+            label_lines: bool = False):
     fig = go.Figure()
     for name, (s, color, dash) in series.items():
         fig.add_trace(go.Scatter(
@@ -303,6 +323,9 @@ def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title
             line=dict(color=color, width=2, dash=dash), marker=dict(size=7),
             hovertemplate=f"{name}: %{{y:.2f}}<extra></extra>",
         ))
+        if label_lines:  # name each line where it starts, so readers don't have to match colours to the legend
+            fig.add_annotation(x=s.index[0], y=s.values[0], text=f"<b>{name}</b>", showarrow=False,
+                               xanchor="left", yanchor="bottom", yshift=8, font=dict(size=12))
     if reference is not None:
         fig.add_hline(y=reference, line_dash="dash", line_color=REFERENCE, line_width=1,
                       annotation_text="Network average", annotation_position="bottom right")
@@ -327,8 +350,9 @@ def airport_map(key: str):
         marker=dict(size=size, color=df["index"].clip(0.5, 1.5), cmin=0.5, cmax=1.5, colorscale=MAP_SCALE,
                     line=dict(width=[4 if c == st.session_state["airport"] else 0.6 for c in df.index],
                               color=[SELECTED if c == st.session_state["airport"] else "rgba(20,30,50,.45)" for c in df.index]),
-                    colorbar=dict(title="× network", thickness=10, len=0.6, tickvals=[0.5, 1, 1.5],
-                                  ticktext=["0.5× better", "1× avg", "1.5× worse"])),
+                    colorbar=dict(title=dict(text="vs network", side="top"), orientation="h", thickness=10,
+                                  len=0.6, x=0.5, xanchor="center", y=-0.02, yanchor="top", tickvals=[0.5, 1, 1.5],
+                                  ticktext=["0.5× (better)", "1× (average)", "1.5× (worse)"])),
         text=labels, customdata=np.stack([df["min_per_flight"], df["index"], df["flights"]], axis=1),
         hovertemplate="<b>%{text}</b><br>%{customdata[0]:.1f} min per departure<br>%{customdata[1]:.2f}× network"
         "<br>%{customdata[2]:,} departures<extra></extra>",
@@ -341,7 +365,7 @@ def airport_map(key: str):
     fig.update_geos(scope="usa", projection_type="albers usa", bgcolor="rgba(0,0,0,0)",
                     landcolor="rgba(150,165,185,.16)", subunitcolor="rgba(150,165,185,.55)",
                     countrycolor="rgba(150,165,185,.55)", showlakes=False)
-    fig.update_layout(height=470, margin=dict(l=0, r=0, t=10, b=0), showlegend=False, dragmode=False,
+    fig.update_layout(height=520, margin=dict(l=0, r=0, t=10, b=70), showlegend=False, dragmode=False,
                       clickmode="event+select")
 
     def picked():
@@ -359,6 +383,36 @@ def pick_from_chart(chart_key: str, codes_by_label: dict[str, str], action) -> N
         action(codes_by_label[points[0]["y"]])
 
 
+# ---- appearance (light / dark) ----------------------------------------------------------
+# Streamlit keeps each visitor's theme choice in their browser (localStorage, the same entry its own
+# Settings menu writes) and reads it when the page loads. The switch writes that entry, records the
+# choice in the URL (?theme=...) so the switch can show it, and reloads the page.
+APPEARANCE = {"Match device": ("System", "system"), "Light": ("Light", "light"), "Dark": ("Dark", "dark")}
+if "appearance" not in st.session_state:
+    by_param = {v[1]: k for k, v in APPEARANCE.items()}.get(st.query_params.get("theme", ""))
+    current = getattr(st.context.theme, "type", None)
+    st.session_state["appearance"] = by_param or ("Dark" if current == "dark" else "Light")
+
+
+def request_appearance() -> None:
+    choice = st.session_state["appearance"] or "Match device"
+    st.session_state["appearance"] = choice
+    st.session_state["apply_appearance"] = choice
+
+
+def apply_appearance_script(choice: str) -> str:
+    stored, param = APPEARANCE[choice]
+    return f"""<script>
+(() => {{
+  const key = `stActiveTheme-${{window.location.pathname}}-v2`;
+  try {{ window.localStorage.setItem(key, JSON.stringify("{stored}")); }} catch (e) {{}}
+  const url = new URL(window.location.href);
+  url.searchParams.set("theme", "{param}");
+  window.location.replace(url.toString());
+}})();
+</script>"""
+
+
 # ---- sidebar --------------------------------------------------------------------------
 with st.sidebar:
     st.subheader("Getting around")
@@ -371,6 +425,9 @@ with st.sidebar:
         "Click any bar or map dot to jump to that airline or airport. Hover over a chart for exact numbers."
     )
     st.segmented_control("Period", YEAR_OPTIONS, key="year", help="Both years together, or one year on its own.")
+    st.segmented_control("Appearance", list(APPEARANCE), key="appearance", on_change=request_appearance,
+                         help="Light or dark. 'Match device' follows your phone or computer setting. "
+                              "Switching reloads the page.")
     with st.expander("What the numbers mean"):
         st.markdown(
             "- **Carrier-attributable delay**: delay caused inside the airline's own operation: maintenance, crew, "
@@ -385,11 +442,14 @@ with st.sidebar:
         )
     st.divider()
     st.caption(
-        f"Built by {AUTHOR} with Python, pandas and Streamlit.\n\n"
+        f"Built by {AUTHOR} with Python, pandas, Plotly and Streamlit.\n\n"
         "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. I used BTS because CAAS/data.gov.sg "
         "only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly "
         "available."
     )
+
+if pending := st.session_state.pop("apply_appearance", None):
+    st.html(apply_appearance_script(pending), unsafe_allow_javascript=True)
 
 # ---- header ---------------------------------------------------------------------------
 first_wave = sum(agg.what_if(by_time, c, ["<09:00"]) for c in flagged)
@@ -447,10 +507,12 @@ with tab_findings:
     if flagged:
         worst_adj = min(carriers.loc[c, "adj_index"] for c in flagged)
         subject = "Both are" if len(flagged) == 2 else "All of them are" if plural else "It is"
-        rates = "; ".join(f"{short(c)} averages {carriers.loc[c, 'min_per_flight']:.1f} min per flight" for c in flagged[:2])
+        mins = [f"{carriers.loc[c, 'min_per_flight']:.1f}" for c in flagged]
+        rates = f"{short(flagged[0])} averages {mins[0]} minutes of carrier-attributable delay per flight" + (
+            ", " + joined([f"{short(c)} {m}" for c, m in zip(flagged[1:], mins[1:])]) if plural else "")
         st.markdown(
             f"**{names} {'stand' if plural else 'stands'} out, and not because of where they fly.** {rates}, against "
-            f"{net:.1f} for the network. {subject} still at least {worst_adj:.1f}× worse than other airlines flying "
+            f"{net:.1f} for the network. {subject} still at least {worst_adj:.1f}× the rate of other airlines flying "
             "from the same airports. Click a bar to look closer."
         )
     labels = [carrier_label(c) for c in carriers.index]
@@ -471,22 +533,32 @@ with tab_findings:
         for c, color in zip(flagged, FLAGGED_MORE):
             series[short(c)] = (agg.hour_profile(by_time, c).loc[5:22] / network_hours, color, "solid")
         if series:
-            profile(series, "Scheduled departure hour (local)", "× network average", reference=1.0, height=320)
+            profile(series, "Scheduled departure hour (local)", "× network average", reference=1.0, height=320,
+                    label_lines=True)
     with f2:
         if first_wave_story:
-            fw = {c: agg.band_table(by_time, c).loc["<09:00"] for c in flagged}
-            widest = all(agg.band_table(by_time, c)["vs_network"].idxmax() == "<09:00" for c in flagged)
-            these = {1: "This airline doesn't", 2: "These two don't", 3: "These three don't"}.get(
-                len(flagged), f"These {len(flagged)} don't")
+            bt = {c: agg.band_table(by_time, c) for c in flagged}
+            fw = {c: bt[c].loc["<09:00"] for c in flagged}
+            widest = all(bt[c]["vs_network"].idxmax() == "<09:00" for c in flagged)
+            always_worse = all((series[short(c)][0] > 1).all() for c in flagged)
+            share_f = joined([f"{fw[c]['flights'] / bt[c]['flights'].sum():.0%}" for c in flagged])
+            share_x = joined([f"{fw[c]['excess_hours_per_year'] / bt[c]['excess_hours_per_year'].sum():.0%}" for c in flagged])
             st.markdown(
-                ("**Their biggest gap is before 09:00, when the rest of the network runs close to its best.** "
-                 if widest else "**They lose the most hours before 09:00.** ")
+                ("**Their biggest gap is before 09:00.** " if widest else "**They lose the most hours before 09:00.** ")
                 + "Across all airlines, carrier-attributable delay is lowest in the late morning and builds through the "
-                f"day. {these} follow that pattern: before 09:00 they run "
-                + " and ".join(f"{fw[c]['vs_network']:.2f}×" for c in flagged)
-                + " the network rate" + (", their widest gap of the day" if widest else "") + ".\n\n"
-                "The first wave matters more than its share of flights, because a late start rolls on through "
-                "the aircraft's day, as below."
+                "day, and theirs follows the same shape. "
+                + ("But they're worse than the network at every hour" if always_worse else "But")
+                + (", and the gap is widest early: before 09:00" if widest else " before 09:00")
+                + f" they run {joined([f'{fw[c]['vs_network']:.2f}×' for c in flagged])} the network rate.\n\n"
+                f"Those early flights are {share_f} of their flights but {share_x} of their excess delay. And a late "
+                "first departure carries on through the aircraft's day, as below."
+            )
+        else:
+            st.markdown(
+                f"**In {period} alone, the flagged airlines don't all lose the most time at the same time of day.** "
+                "The chart shows how far each one runs above the network at every hour. Over both years together, "
+                "SkyWest and American both lose the most before 09:00, which is what the recommendation is based on. "
+                "Switch the period back to both years to see that."
             )
     st.markdown("**One aircraft's day**")
     st.image(rotation_diagram(), width="stretch")
@@ -509,12 +581,14 @@ with tab_findings:
                "on the Airports tab.")
 
     st.html('<p class="finding-no">SO WHAT</p>')
-    st.subheader(f"Fixing the first wave is worth about {round(first_wave, -2):,.0f} hours a year", anchor="so-what")
+    st.subheader(f"Fixing their first flights of the day is worth about {round(first_wave, -2):,.0f} hours a year",
+                 anchor="so-what")
     st.markdown(
-        "**Start with the first flights of the day.** If the flagged airlines' pre-09:00 departures ran at the network's pre-09:00 rate, that much carrier-"
-        "attributable delay would disappear, before counting the knock-on delay shown above. Likely places to look are "
-        "overnight maintenance sign-off, crew show-up and aircraft preparation at the stations that launch the "
-        "morning bank."
+        "**Start with the flights before 09:00.** If the flagged airlines' departures before 09:00 had the same "
+        "carrier-attributable delay rate as all airlines at that time, that much delay would disappear a year, before "
+        "counting the knock-on delay to later flights shown above. Likely places to look are overnight maintenance "
+        "sign-off, crew turning up on time and getting aircraft ready (cleaning, catering, fuelling) at the airports "
+        "where their first flights of the day leave from."
     )
     st.button("Try other fixes in the calculator →", on_click=run_recommendation, type="tertiary", key="so_what")
 
@@ -531,9 +605,9 @@ with tab_airline:
     name = short(code)
 
     st.markdown(
-        f'<p class="lead">{name} averages <b>{row["min_per_flight"]:.1f} minutes</b> of delay in its own control per '
-        f"flight, {compare_word(row['index']).replace('**', '')} the average airline ({net:.1f} min). Against other "
-        f"airlines at the same airports it's {compare_word(row['adj_index']).replace('**', '')} them."
+        f'<p class="lead">{name} averages <b>{row["min_per_flight"]:.1f} minutes</b> of carrier-attributable delay per '
+        f"flight, {higher_lower(row['index'])} than the average across all airlines ({net:.1f} min). Compared with "
+        f"other airlines at the same airports, it's {higher_lower(row['adj_index'])}."
         + (" <b>Flagged.</b>" if row["flagged"] else "") + "</p>",
         unsafe_allow_html=True,
     )
@@ -567,7 +641,8 @@ with tab_airline:
 
     bands = agg.band_table(by_time, code)
     worst_band = bands["vs_network"].idxmax()
-    st.markdown(f"**Worst time of day: {worst_band}**, at {bands.loc[worst_band, 'vs_network']:.2f}× the network.")
+    st.markdown(f"**Worst time of day: {BAND_WORDS[worst_band]}**, at {bands.loc[worst_band, 'vs_network']:.2f}× "
+                "the network.")
     with st.expander("Show the numbers for each time of day"):
         st.dataframe(
             bands.assign(excess_hours_per_year=bands["excess_hours_per_year"].round()).reset_index().rename(columns={
@@ -625,11 +700,15 @@ with tab_airport:
     here["index"] = here["min_per_flight"] / net
     here = here.sort_values("min_per_flight", ascending=False)
     biggest = (here["carrier_delay"] / here["carrier_delay"].sum()).idxmax()
+    sizable = here[here["flights"] >= 1_000 // (1 if n_years > 1 else 2)]
+    worst_here = sizable["min_per_flight"].idxmax() if len(sizable) else biggest
     st.markdown(
         f'<p class="lead">Departures from {html.escape(city)} average <b>{row["min_per_flight"]:.1f} minutes</b> of '
-        f"carrier-attributable delay, {compare_word(row['index']).replace('**', '')} the network. "
-        f"{html.escape(CARRIER_NAMES.get(biggest, biggest))} accounts for the most of it "
-        f"({here.loc[biggest, 'carrier_delay'] / here['carrier_delay'].sum():.0%} of the delay minutes here)."
+        f"carrier-attributable delay, {higher_lower(row['index'])} than the average across all airports. "
+        f"{html.escape(short(biggest))} accounts for the most of it "
+        f"({here.loc[biggest, 'carrier_delay'] / here['carrier_delay'].sum():.0%} of the delay minutes here)"
+        + (f"; {html.escape(short(worst_here))} has the highest rate ({here.loc[worst_here, 'min_per_flight']:.1f} min "
+           "per departure)." if worst_here != biggest else ", and has the highest rate too.")
         + (" <b>Flagged.</b>" if row["flagged"] else "") + "</p>",
         unsafe_allow_html=True,
     )
@@ -663,7 +742,8 @@ with tab_whatif:
     w1, w2 = st.columns(2)
     w1.multiselect("Airlines", carriers.index.tolist(), key="wi_airlines", format_func=carrier_label,
                    on_change=custom_preset)
-    w2.multiselect("Scheduled departure", list(TIME_BANDS), key="wi_bands", on_change=custom_preset)
+    w2.multiselect("Scheduled departure", list(TIME_BANDS), key="wi_bands", on_change=custom_preset,
+                   format_func=lambda b: BAND_WORDS[b].capitalize() if b in ("<09:00", "21+") else BAND_WORDS[b])
     st.slider("Share of the gap closed", 0, 100, step=10, format="%d%%", key="wi_close", on_change=custom_preset)
     picked, picked_bands = st.session_state["wi_airlines"], st.session_state["wi_bands"]
     close = st.session_state["wi_close"] / 100
@@ -673,8 +753,8 @@ with tab_whatif:
         b = agg.band_table(by_time, c)
         sel = b.loc[picked_bands] if picked_bands else b.iloc[0:0]
         rows.append({
-            "Airline": carrier_label(c),
-            "× network in chosen bands": (sel["min_per_flight"] * sel["flights"]).sum()
+            "Airline": short(c),
+            "vs all airlines": (sel["min_per_flight"] * sel["flights"]).sum()
             / (sel["network_min_per_flight"] * sel["flights"]).sum() if len(sel) else None,
             "Flights / yr": round(sel["flights"].sum() / n_years),
             "Hours saved / yr": agg.what_if(by_time, c, picked_bands, close),
@@ -696,7 +776,7 @@ with tab_whatif:
         st.dataframe(
             pd.DataFrame(rows).round({"Hours saved / yr": 0}), hide_index=True, width="stretch",
             column_config={
-                "× network in chosen bands": st.column_config.NumberColumn(format="%.2f×"),
+                "vs all airlines": st.column_config.NumberColumn(format="%.2f×"),
                 "Flights / yr": st.column_config.NumberColumn(format="localized"),
                 "Hours saved / yr": st.column_config.NumberColumn(format="localized"),
             },
@@ -738,7 +818,8 @@ with tab_method:
     with d2:
         st.markdown("**Checks**")
         st.markdown(
-            "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both.\n"
+            "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both, and each "
+            "stays 1.30–1.37× the rate of other airlines at the same airports in each year.\n"
             "- With the **CrowdStrike IT outage** (19–28 July 2024) removed, SkyWest and American stay flagged. Frontier, "
             "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the "
             "network average up.\n"
