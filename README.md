@@ -75,7 +75,7 @@ Picking 2024 or 2025 changes the Findings tab too, with a note that the main con
    both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
 3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
 4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
-5. **What if:** the preset gives the report's 20,600 h. Try **Halfway there** (10,300 h) or **Evening (17:00–21:00)**.
+5. **What if:** the preset gives the report's 20,600 h. Try **Half the gap before 09:00** (10,300 h) or **Evening (17:00–21:00)**.
    Switching the period to 2024 or 2025 keeps SkyWest and American flagged. A single year can't apply the every-year
    test, so it also flags a few airlines that only stood out that year (JetBlue in 2024; PSA and Frontier in 2025).
 
