@@ -12,15 +12,15 @@ needed for this kind of analysis.
 
 ## Result (BTS Jan 2024 – Dec 2025, 13.8M completed flights)
 
-- **Carriers:** SkyWest (OO) and American (AA) run 1.54× and 1.38× the network's carrier-attributable
+- **Carriers:** SkyWest (OO) and American (AA) run 1.54× and 1.38× the all-airline average carrier-attributable
   delay per flight (8.0 and 7.2 min vs 5.2). Both stay ≥ 1.3× the rate of other airlines at the same airports,
   in 2024 and 2025 separately, and with the July 2024 CrowdStrike outage removed (which also lifts Frontier,
   just under the bar in 2024, over it).
 - **Airports:** Detroit (DTW), Madison (MSN) and Des Moines (DSM) are flagged. The airport effect is much smaller
   than the carrier effect (about 5.6k vs 68k excess delay hours a year).
-- **Time:** across the network, carrier-attributable delay is 2.0× higher at 22:00 than at 10:00. Sunday is
-  the worst day and Wednesday the best. For both flagged carriers the gap is widest **before 09:00** (1.76× and 1.51× the network).
-- **Recommendation:** SkyWest and American should fix the delays on their first flights of the day (before 09:00). Matching the network's
+- **Time:** across all airlines, carrier-attributable delay is 2.0× higher at 22:00 than at 10:00. Sunday is
+  the worst day and Wednesday the best. For both flagged carriers the gap is widest **before 09:00** (1.76× and 1.51× the all-airline rate).
+- **Recommendation:** SkyWest and American should fix the delays on their first flights of the day (before 09:00). Matching the all-airline
   pre-09:00 rate would remove about **20,600 carrier-attributable delay hours a year**.
 
 - **Portfolio case study (2-minute read):** [`report/case_study.html`](report/case_study.html), with the same text in
@@ -59,8 +59,8 @@ Live app: **https://edwinleow-aviation-delays.streamlit.app/**
 graphic of the airline ranking, a map of US airports and a diagram of how one late morning flight spreads delay
 through an aircraft's day. Every chart is clickable: click an airline, a bar or a map dot
 to open that airline or airport. The sidebar has a short guide, a glossary and a period switch (both years, 2024,
-2025). Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison
-airline, dashed grey = network average. The light and dark themes (`.streamlit/config.toml`) follow the
+2025). Colours mean the same thing everywhere: orange = flagged (in the app and the report charts), blue = the one you picked, aqua = the comparison
+airline, dashed grey = all-airline average. The light and dark themes (`.streamlit/config.toml`) follow the
 visitor's device by default; visitors can switch instantly with the System / Light / Dark picker at the top of
 Streamlit's ⋮ menu (the sidebar points there). Fonts and the map outline are served from `app/static/` (licences in
 `app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
@@ -71,7 +71,7 @@ Picking 2024 or 2025 changes the Findings tab too, with a note that the main con
 **2-minute demo script**
 
 1. **Front page:** read the standfirst and the departures board. SkyWest and American are the two flagged airlines.
-2. **Finding 01:** the two-dot chart (against all airlines, and against other airlines at the same airports). Click SkyWest: 1.54× the network, still 1.34× against others at the same airports, in
+2. **Finding 01:** the two-dot chart (against all airlines, and against other airlines at the same airports). Click SkyWest: 1.54× the average, still 1.34× against others at the same airports, in
    both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
 3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
 4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
@@ -105,7 +105,7 @@ Cancelled, Diverted, CarrierDelay, WeatherDelay, NASDelay, SecurityDelay, LateAi
   the delay metrics.
 - **Time of day** = *scheduled* departure hour (`CRSDepTime`), so a late flight doesn't move into a later hour bucket.
 - **Headline metric** = carrier-attributable delay minutes per completed flight. "Disproportionate" =
-  ≥1.2× the network rate, and still ≥1.2× after controlling for mix (a carrier vs other carriers at
+  ≥1.2× the all-airline rate, and still ≥1.2× after controlling for mix (a carrier vs other carriers at
   the same airports, an airport vs the same carriers elsewhere). `excess_hours` turns the gap into
   the one number the recommendation carries.
 

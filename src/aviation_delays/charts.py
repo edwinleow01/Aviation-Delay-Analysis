@@ -12,16 +12,16 @@ import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 
-HIGHLIGHT = "#2a78d6"
+HIGHLIGHT = "#eb6834"  # same orange as "flagged" in the app
 NEUTRAL = "#c3c2b7"
 TEXT = "#0b0b0b"
 TEXT_SECONDARY = "#52514e"
 GRID = "#e6e5e0"
 SURFACE = "#fcfcfb"
 
-# Single-hue sequential ramp (light -> dark blue) for magnitude.
+# Single-hue sequential ramp (light -> dark orange) for magnitude; darker = more delay, as in the app.
 SEQUENTIAL = LinearSegmentedColormap.from_list(
-    "seq_blue", ["#f3f7fd", "#cde2fb", "#9ec5f4", "#6da7ec", "#3987e5", "#256abf", "#184f95", "#0d366b"]
+    "seq_orange", ["#fdf5ef", "#fbe1d0", "#f7c3a3", "#f29f72", "#eb6834", "#c9501f", "#9a3b15", "#6a280d"]
 )
 
 
@@ -66,7 +66,7 @@ def ranked_bars(
     xlabel: str = "",
     highlight: list[str] | None = None,
     reference: float | None = None,
-    reference_label: str = "Network average",
+    reference_label: str = "Average",
     fmt: str = "{:.1f}",
     top_n: int | None = 15,
 ):
@@ -141,7 +141,7 @@ def profile_line(
     xlabel: str = "",
     ylabel: str = "",
     reference: float | None = None,
-    reference_label: str = "Network average",
+    reference_label: str = "Average",
 ):
     """Single-series line (e.g. carrier-delay minutes by scheduled departure hour)."""
     fig, ax = plt.subplots(figsize=(8, 3.8))
