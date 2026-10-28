@@ -61,6 +61,15 @@ st.html("""
   .toc { font-size: .9rem; margin: .4rem 0 .2rem; }
   .toc a { margin-right: 1.1rem; text-decoration: none; }
   .toc a:hover { text-decoration: underline; }
+  /* Method tab: every section is a bold heading line, then its text or list, with the same spacing. */
+  .mh { font-weight: 700; margin: 1.15rem 0 .3rem; }
+  .mh:first-child { margin-top: 0; }
+  .mh + p, .mh + ul { margin-top: 0; }
+  /* Tabs look the same in every browser: only the open tab is coloured; keyboard focus keeps an outline. */
+  [role="tab"] { border: 0 !important; box-shadow: none !important; background: transparent !important; }
+  [role="tab"][aria-selected="false"] { color: inherit !important; }
+  [role="tab"]:focus:not(:focus-visible) { outline: none !important; }
+  [role="tab"]:focus-visible { outline: 2px solid currentColor !important; outline-offset: 2px; border-radius: 4px; }
 </style>
 """)
 
@@ -747,51 +756,48 @@ with tab_whatif:
 # ---- method & report ------------------------------------------------------------------
 with tab_method:
     st.subheader("How the analysis works")
-    st.markdown(
-        '<p class="lead">The short version: one public dataset, one measure, and a deliberately strict rule for what '
-        "counts as standing out. Everything on this tab describes the full 2024–2025 data.</p>",
-        unsafe_allow_html=True,
-    )
+    st.markdown("The short version: one public dataset, one measure, and a deliberately strict rule for what counts as "
+                "standing out. Everything on this tab describes the full 2024–2025 data.")
+
+    def sections(*items: tuple[str, str]) -> str:
+        """Heading line + body for each section, as one block so the spacing matches in both columns."""
+        return "\n\n".join(f'<p class="mh">{title}</p>\n\n{body}' for title, body in items)
+
     d1, d2 = st.columns([3, 2], gap="large")
-    with d1:
-        st.markdown(
-            "**The data.** The US Department of Transportation's Bureau of Transportation Statistics (BTS) records "
-            "every domestic flight by the larger US airlines, with the cause of every delay of 15 minutes or more. "
-            "This analysis uses January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) "
-            "flights have no delay breakdown, so the measures use the 13.8 million completed flights. Only 2 delayed "
-            "flights were missing their cause data.\n\n"
-            "**Why US data.** CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, "
-            "cause-coded delay data is publicly available. BTS is the best public dataset with that level of detail.\n\n"
-            "**The measure.** Carrier-attributable delay minutes per completed flight. BTS splits each delay into five "
-            "causes; *carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, "
-            "baggage). BTS has no separate mechanical field, so this is never called mechanical delay here.\n\n"
-            "**What counts as standing out.** An airline or airport is flagged only if it's at least 1.2× the network "
-            "average on all three tests: over the two years, in each year separately, and against other airlines at "
-            "the same airports (or, for an airport, the same airlines elsewhere). That last test stops anyone being "
-            "penalised for flying from difficult airports. Airlines need 50,000+ flights and airports 20,000+ "
-            "departures to be ranked.\n\n"
-            "**Time of day** uses the *scheduled* departure hour, so a late flight doesn't move into a later hour."
-        )
-    with d2:
-        st.markdown("**Checks**")
-        st.markdown(
-            "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both, and each "
-            "stays 1.30–1.37× the rate of other airlines at the same airports in each year.\n"
-            "- With the **CrowdStrike IT outage** (19–28 July 2024) removed, SkyWest and American stay flagged. Frontier, "
-            "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the "
-            "network average up.\n"
-            "- JetBlue looked bad in 2024 (1.54×) but not in 2025 (1.02×), so it isn't flagged."
-        )
-        st.markdown("**Limits**")
-        st.markdown(
-            "- Causes are only recorded for delays of 15+ minutes, and airlines report them themselves.\n"
-            "- Carrier delay mixes maintenance with crew, cleaning and baggage; the data can't separate them.\n"
-            "- Knock-on delay to later flights is recorded as late-arriving aircraft and isn't counted, so the "
-            "savings figures are conservative.\n"
-            "- SkyWest is a regional airline flying for United, Delta, American and Alaska; its numbers are its own "
-            "operation's.\n"
-            "- US domestic flying only; results may not carry over to other markets such as Changi."
-        )
+    d1.markdown(sections(
+        ("The data", "The US Department of Transportation's Bureau of Transportation Statistics (BTS) records every "
+         "domestic flight by the larger US airlines, with the cause of every delay of 15 minutes or more. This analysis "
+         "uses January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) flights "
+         "have no delay breakdown, so the measures use the 13.8 million completed flights. Only 2 delayed flights were "
+         "missing their cause data."),
+        ("Why US data", "CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, "
+         "cause-coded delay data is publicly available. BTS is the best public dataset with that level of detail."),
+        ("The measure", "Carrier-attributable delay minutes per completed flight. BTS splits each delay into five causes; "
+         "*carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, baggage). BTS "
+         "has no separate mechanical field, so this is never called mechanical delay here."),
+        ("What counts as standing out", "An airline or airport is flagged only if it's at least 1.2× the network average "
+         "on all three tests: over the two years, in each year separately, and against other airlines at the same "
+         "airports (or, for an airport, the same airlines elsewhere). That last test stops anyone being penalised for "
+         "flying from difficult airports. Airlines need 50,000+ flights and airports 20,000+ departures to be ranked."),
+        ("Time of day", "Uses the *scheduled* departure hour, so a late flight doesn't move into a later hour."),
+    ), unsafe_allow_html=True)
+    d2.markdown(sections(
+        ("Checks",
+         "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both, and each stays "
+         "1.30–1.37× the rate of other airlines at the same airports in each year.\n"
+         "- With the **CrowdStrike IT outage** (19–28 July 2024) removed, SkyWest and American stay flagged. Frontier, "
+         "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the network "
+         "average up.\n"
+         "- JetBlue looked bad in 2024 (1.54×) but not in 2025 (1.02×), so it isn't flagged."),
+        ("Limits",
+         "- Causes are only recorded for delays of 15+ minutes, and airlines report them themselves.\n"
+         "- Carrier delay mixes maintenance with crew, cleaning and baggage; the data can't separate them.\n"
+         "- Knock-on delay to later flights is recorded as late-arriving aircraft and isn't counted, so the savings "
+         "figures are conservative.\n"
+         "- SkyWest is a regional airline flying for United, Delta, American and Alaska; its numbers are its own "
+         "operation's.\n"
+         "- US domestic flying only; results may not carry over to other markets such as Changi."),
+    ), unsafe_allow_html=True)
     st.divider()
     st.markdown("**The full report** has the method in detail, every supporting table and the robustness checks.")
     if REPORT_PDF.exists():
