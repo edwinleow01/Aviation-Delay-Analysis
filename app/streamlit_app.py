@@ -6,8 +6,8 @@ airline, airport and time, and size the first-wave recommendation.
 Reads only the small tables in app/aggregates/ (rebuild with
 `python scripts/build_app_data.py`), so it runs without the 85 MB dataset.
 Fonts and the US map outline are served from app/static/.
-Optional: put your own photo at app/assets/hero.jpg (and a one-line caption in
-app/assets/hero_caption.txt) to show it under the title.
+Optional: a photo at app/assets/hero.jpg (with a one-line caption in
+app/assets/hero_caption.txt) shows under the title.
 """
 
 from __future__ import annotations
@@ -35,7 +35,7 @@ REPORT_PDF = APP_DIR.parent / "report" / "aviation_delay_report.pdf"
 FLAGGED = "#eb6834"    # orange: flagged as disproportionate
 FLAGGED_2 = "#a8431a"  # dark orange: second flagged airline when two share a chart
 FLAGGED_MORE = [FLAGGED, FLAGGED_2, "#f4a06f", "#6e2b10", "#c95a2a"]  # oranges, one per flagged airline
-SELECTED = "#2a78d6"   # blue: the airline or airport you picked
+SELECTED = "#2a78d6"   # blue: the selected airline or airport
 COMPARE = "#1baf7a"    # aqua: the comparison airline
 NEUTRAL = "#b9c3d1"    # blue-grey: everything else
 REFERENCE = "#8a8984"  # grey dashed: network average

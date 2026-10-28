@@ -23,6 +23,22 @@ needed for this kind of analysis.
 - **Recommendation:** SkyWest and American should fix the delays on their first flights of the day (before 09:00). Matching the all-airline
   pre-09:00 rate would remove about **20,600 carrier-attributable delay hours a year**.
 
+## Take the 2-minute tour
+
+Open the live app: **https://edwinleow-aviation-delays.streamlit.app/**
+
+1. **Front page:** the standfirst sets out the question, and the departures board ranks airlines. SkyWest and American are the two flagged.
+2. **Finding 01:** the two-dot chart compares each airline with all airlines and with other airlines at the same airports.
+   Click SkyWest: 1.54× the average, still 1.34× against others at the same airports, in both years. Its worst airports
+   against other airlines there are Flint, Midland/Odessa and Lubbock. Pick Southwest under "Compare with" to see the contrast.
+3. **Finding 02:** the first-flights chart and the "One aircraft's day" diagram show why the morning matters.
+4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
+5. **What if:** the recommendation scenario gives 20,600 h a year. Try **Half the gap before 09:00** (10,300 h) or
+   **Evening (17:00–21:00)**. Switching the period to 2024 or 2025 keeps SkyWest and American flagged. A single year can't
+   apply the every-year test, so it also flags a few airlines that only stood out that year (JetBlue in 2024; PSA and Frontier in 2025).
+
+## Read the write-up
+
 - **Portfolio case study (2-minute read):** [`report/case_study.html`](report/case_study.html), with the same text in
   [`report/case_study.md`](report/case_study.md) plus the resume bullets.
 - **Full report** with method and supporting tables: [`report/aviation_delay_report.html`](report/aviation_delay_report.html)
@@ -37,7 +53,7 @@ make dataset      # clean -> data/processed/flights.parquet, prints a cleaning s
 make test
 ```
 
-Then open `notebooks/01_data_check.ipynb` (Week 1 gate) and `notebooks/02_analysis.ipynb` (Week 2).
+Then open `notebooks/01_data_check.ipynb` (data checks) and `notebooks/02_analysis.ipynb` (analysis).
 `make report` runs the analysis and writes a code-free HTML report to
 `report/aviation_delay_report.html`, plus chart PNGs in `report/figures/` for the portfolio page.
 `make pdf` also prints it to PDF with headless Chrome. The case-study page is written by hand: update its numbers if the data changes.
@@ -52,32 +68,22 @@ The app reads only the small tables in `app/aggregates/` (≈400 KB, committed),
 downloading the BTS data. After rebuilding the dataset, refresh them with `make app-data`.
 `tests/test_aggregates.py` and `tests/test_app.py` check that the app reproduces the report's numbers.
 To put it online, deploy `app/streamlit_app.py` on Streamlit Community Cloud (it uses `app/requirements.txt`).
+The live version is linked under [Take the 2-minute tour](#take-the-2-minute-tour).
 
-Live app: **https://edwinleow-aviation-delays.streamlit.app/**
+### How the app works
 
-**Using it.** The front page reads like a short article: three findings, each with a chart, a departures-board
+The front page reads like a short article: three findings, each with a chart, a departures-board
 graphic of the airline ranking, a map of US airports and a diagram of how one late morning flight spreads delay
 through an aircraft's day. Every chart is clickable: click an airline, a bar or a map dot
 to open that airline or airport. The sidebar has a short guide, a glossary and a period switch (both years, 2024,
-2025). Colours mean the same thing everywhere: orange = flagged (in the app and the report charts), blue = the one you picked, aqua = the comparison
+2025). Colours mean the same thing everywhere: orange = flagged (in the app and the report charts), blue = the selected airline or airport, aqua = the comparison
 airline, dashed grey = all-airline average. The light and dark themes (`.streamlit/config.toml`) follow the
 visitor's device by default; visitors can switch instantly with the System / Light / Dark picker at the top of
 Streamlit's ⋮ menu (the sidebar points there). Fonts and the map outline are served from `app/static/` (licences in
-`app/static/LICENSES.md`). To add your own photo, see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
+`app/static/LICENSES.md`). Optional hero photo: see `app/assets/README.md`. The **Method & report** tab explains the method and checks and
 has a download button for `report/aviation_delay_report.pdf` (A4, page-numbered, appendix tables sized to fit),
 so regenerate that file (`make pdf`) if the analysis changes.
 Picking 2024 or 2025 changes the Findings tab too, with a note that the main conclusion uses both years.
-
-**2-minute demo script**
-
-1. **Front page:** read the standfirst and the departures board. SkyWest and American are the two flagged airlines.
-2. **Finding 01:** the two-dot chart (against all airlines, and against other airlines at the same airports). Click SkyWest: 1.54× the average, still 1.34× against others at the same airports, in
-   both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
-3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
-4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
-5. **What if:** the preset gives the report's 20,600 h. Try **Half the gap before 09:00** (10,300 h) or **Evening (17:00–21:00)**.
-   Switching the period to 2024 or 2025 keeps SkyWest and American flagged. A single year can't apply the every-year
-   test, so it also flags a few airlines that only stood out that year (JetBlue in 2024; PSA and Frontier in 2025).
 
 ## Getting the source data
 
@@ -113,7 +119,7 @@ Cancelled, Diverted, CarrierDelay, WeatherDelay, NASDelay, SecurityDelay, LateAi
 
 ```
 src/aviation_delays/   data.py (load/clean), metrics.py, charts.py, aggregates.py (app tables), airport_names.csv
-app/                   streamlit_app.py, aggregates/ (summary tables), static/ (fonts, map), assets/ (your photo)
+app/                   streamlit_app.py, aggregates/ (summary tables), static/ (fonts, map), assets/ (optional hero photo)
 scripts/               download_bts.py, build_dataset.py, build_app_data.py
 notebooks/             01_data_check.ipynb, 02_analysis.ipynb
 report/                exported HTML report + figures (generated)
