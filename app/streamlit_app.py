@@ -212,7 +212,7 @@ def compare_word(ratio: float) -> str:
 
 
 # ---- graphics -------------------------------------------------------------------------
-def departures_board(rows: pd.DataFrame, title: str, limit: int = 8) -> str:
+def departures_board(rows: pd.DataFrame, title: str, period: str, limit: int = 8) -> str:
     """An airport departures board (FIDS) listing airlines by carrier-attributable delay."""
     body = []
     for i, (code, r) in enumerate(rows.head(limit).iterrows()):
@@ -250,7 +250,7 @@ def departures_board(rows: pd.DataFrame, title: str, limit: int = 8) -> str:
   @media (prefers-reduced-motion: reduce) {{ .fids tr {{ animation:none; }} }}
 </style>
 <div class="fids" role="img" aria-label="Departures board ranking airlines by carrier-attributable delay">
-  <div class="top"><b>DEPARTURES</b><span>{html.escape(title)}<br>ALL-AIRLINE AVG {net:.1f} MIN</span></div>
+  <div class="top"><b>DEPARTURES</b><span>{html.escape(title)}<br>{html.escape(period)}<br>ALL-AIRLINE AVG {net:.1f} MIN</span></div>
   <table>
     <thead><tr><th>AIRLINE</th><th>CODE</th><th class="num">MIN/FLT</th><th class="num">VS AVG</th><th>STATUS</th></tr></thead>
     <tbody>{''.join(body)}</tbody>
@@ -488,7 +488,7 @@ with left:
         cap = APP_DIR / "assets" / "hero_caption.txt"
         st.image(str(hero), caption=cap.read_text().strip() if cap.exists() else None)
 with right:
-    st.html(departures_board(carriers, f"CARRIER-ATTRIBUTABLE DELAY · {period}"))
+    st.html(departures_board(carriers, "CARRIER-ATTRIBUTABLE DELAY", period))
 
 tab_findings, tab_airline, tab_airport, tab_whatif, tab_method = st.tabs(TABS, key="tab", on_change="rerun")
 
@@ -757,12 +757,12 @@ with tab_whatif:
         sel = b.loc[picked_bands] if picked_bands else b.iloc[0:0]
         rows.append({
             "Airline": short(c),
+            "Hours saved a year": agg.what_if(by_time, c, picked_bands, close),
             "Delay vs the average": (sel["min_per_flight"] * sel["flights"]).sum()
             / (sel["network_min_per_flight"] * sel["flights"]).sum() if len(sel) else None,
             "Flights a year": round(sel["flights"].sum() / n_years),
-            "Delay hours saved a year": agg.what_if(by_time, c, picked_bands, close),
         })
-    total = sum(r["Delay hours saved a year"] for r in rows)
+    total = sum(r["Hours saved a year"] for r in rows)
     r1, r2 = st.columns([1, 2])
     r1.metric("Carrier-attributable delay removed", f"{round(total, -2):,.0f} hours a year")
     if total > 0:
@@ -777,11 +777,11 @@ with tab_whatif:
         r2.markdown("Pick at least one airline and one departure time.")
     if rows:
         st.dataframe(
-            pd.DataFrame(rows).round({"Delay hours saved a year": 0}), hide_index=True, width="stretch",
+            pd.DataFrame(rows).round({"Hours saved a year": 0}), hide_index=True, width="stretch",
             column_config={
                 "Delay vs the average": st.column_config.NumberColumn(format="%.2f×"),
                 "Flights a year": st.column_config.NumberColumn(format="localized"),
-                "Delay hours saved a year": st.column_config.NumberColumn(format="localized"),
+                "Hours saved a year": st.column_config.NumberColumn(format="localized"),
             },
         )
     st.caption(
