@@ -181,6 +181,28 @@ def higher_lower(ratio: float) -> str:
     return "about the same"
 
 
+def verdict(row: pd.Series, entity: str) -> str:
+    """One line saying what the numbers add up to: flagged, or which test it fails. Doesn't repeat the metrics."""
+    years = [c for c in row.index if c.startswith("index_")]
+    by_year = ", ".join(f"{c[-4:]}: {row[c]:.2f}×" for c in years)
+    mix = "against other airlines at the same airports" if entity == "airline" else "against the same airlines elsewhere"
+    if row["flagged"]:
+        return f"<b>Flagged.</b> Past the {agg.FLAG_INDEX}× flag line overall, in every year ({by_year}), and {mix}."
+    if row["index"] < 1:
+        extra = (f", but {row['adj_index']:.2f}× {mix}" if row["adj_index"] >= agg.FLAG_INDEX else "")
+        return f"<b>Better than average</b> overall, at {row['index']:.2f}× the average{extra}."
+    reasons = []
+    if row["index"] < agg.FLAG_INDEX:
+        reasons.append(f"at {row['index']:.2f}× the average it's under the {agg.FLAG_INDEX}× flag line")
+    low = [c[-4:] for c in years if row[c] < agg.FLAG_INDEX]
+    if low and row["index"] >= agg.FLAG_INDEX:
+        reasons.append(f"it wasn't past the line in {joined(low)} ({by_year})")
+    if row["adj_index"] < agg.FLAG_INDEX:
+        explains = "its airports explain" if entity == "airline" else "its airline mix explains"
+        reasons.append(f"{mix} it's only {row['adj_index']:.2f}×, so {explains} part of it")
+    return "<b>Above average, but not flagged:</b> " + "; ".join(reasons) + "."
+
+
 def compare_word(ratio: float) -> str:
     if ratio >= 1.05:
         return f"**{ratio - 1:.0%} more** than"
@@ -594,24 +616,15 @@ with tab_airline:
     row = carriers.loc[code]
     name = short(code)
 
-    st.markdown(
-        f'<p class="lead">{name} averages <b>{row["min_per_flight"]:.1f} minutes</b> of carrier-attributable delay per '
-        f"flight, {higher_lower(row['index'])} than the average across all airlines ({net:.1f} min). Compared with "
-        f"other airlines at the same airports, it's {higher_lower(row['adj_index'])}."
-        + (" <b>Flagged.</b>" if row["flagged"] else "") + "</p>",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<p class="lead">{verdict(row, "airline")}</p>', unsafe_allow_html=True)
     m = st.columns(4)
-    m[0].metric("Delay per flight", f"{row['min_per_flight']:.1f} min", f"{row['min_per_flight'] - net:+.1f} vs network",
-                delta_color="inverse")
+    m[0].metric("Delay per flight", f"{row['min_per_flight']:.1f} min",
+                help=f"Carrier-attributable delay per completed flight. All airlines: {net:.1f} min")
     m[1].metric("vs network", f"{row['index']:.2f}×", help="1.00× = exactly average")
     m[2].metric("vs others at same airports", f"{row['adj_index']:.2f}×",
                 help="Compared with other airlines flying from the same airports")
     m[3].metric("Excess delay", f"{round(row['excess_hours_per_year'], -2):,.0f} h / yr",
                 help="Delay hours a year above what the network average rate would give")
-    year_cols = [c for c in carriers.columns if c.startswith("index_")]
-    if len(year_cols) > 1:
-        st.caption("By year: " + " · ".join(f"{c[-4:]}: {row[c]:.2f}× network" for c in year_cols))
 
     series_h = {name: (agg.hour_profile(by_time, code).loc[5:23], SELECTED, "solid")}
     series_d = {name: (agg.weekday_profile(by_time, code), SELECTED, "solid")}
@@ -693,13 +706,12 @@ with tab_airport:
     sizable = here[here["flights"] >= 1_000 // (1 if n_years > 1 else 2)]
     worst_here = sizable["min_per_flight"].idxmax() if len(sizable) else biggest
     st.markdown(
-        f'<p class="lead">Departures from {html.escape(city)} average <b>{row["min_per_flight"]:.1f} minutes</b> of '
-        f"carrier-attributable delay, {higher_lower(row['index'])} than the average across all airports. "
-        f"{html.escape(short(biggest))} accounts for the most of it "
-        f"({here.loc[biggest, 'carrier_delay'] / here['carrier_delay'].sum():.0%} of the delay minutes here)"
+        f'<p class="lead">{verdict(row, "airport")} '
+        f"{html.escape(short(biggest))} has the largest share of the delay here "
+        f"({here.loc[biggest, 'carrier_delay'] / here['carrier_delay'].sum():.0%})"
         + (f"; {html.escape(short(worst_here))} has the highest rate ({here.loc[worst_here, 'min_per_flight']:.1f} min "
            "per departure)." if worst_here != biggest else ", and has the highest rate too.")
-        + (" <b>Flagged.</b>" if row["flagged"] else "") + "</p>",
+        + "</p>",
         unsafe_allow_html=True,
     )
     m = st.columns(3)
@@ -772,9 +784,8 @@ with tab_whatif:
             },
         )
     st.caption(
-        "Conservative: a late early flight also delays the aircraft's later flights, which BTS books as "
-        "late-arriving-aircraft delay and which isn't counted here. Airlines already better than the network at a "
-        "given time count as zero."
+        "Conservative: knock-on delay to the aircraft's later flights isn't counted. Airlines already better than "
+        "the network at a given time count as zero."
     )
 
 # ---- method & report ------------------------------------------------------------------
