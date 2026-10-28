@@ -40,16 +40,12 @@ def test_defaults_match_report():
     assert at.session_state["airline"] == "OO"  # worst airline is preselected
 
 
-def test_quick_start_buttons_open_the_right_tab():
+def test_recommendation_link_opens_the_calculator():
     at = run_app()
     labels = [b.label for b in at.button]
-    at.button[[i for i, label in enumerate(labels) if "worst airline" in label][0]].click().run()
-    assert at.session_state["tab"] == "Airlines" and at.session_state["airline"] == "OO"
-
-    at.button[[i for i, label in enumerate(labels) if "going wrong" in label][0]].click().run()
-    assert at.session_state["tab"] == "Airports" and at.session_state["airport"] == "DTW"
-
-    at.button[[i for i, label in enumerate(labels) if "fixing it be worth" in label][0]].click().run()
+    assert not any("Start with a question" in m.value for m in at.markdown)  # removed: tabs and section links do this
+    assert not any(c.value.startswith("Source: US DOT") for c in at.caption)  # removed: credited under the title
+    at.button[labels.index("Try other fixes in the calculator →")].click().run()
     assert at.session_state["tab"] == "What if"
     assert metrics(at)["Carrier-attributable delay removed"] == "20,600 hours a year"
     assert not at.exception

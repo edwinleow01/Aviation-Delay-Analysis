@@ -321,6 +321,38 @@ def hbar(df: pd.DataFrame, labels: list[str], flagged_codes: set[str], xlabel: s
     return st.plotly_chart(fig, **kwargs)
 
 
+def dumbbell(df: pd.DataFrame, key: str, on_select):
+    """Each airline's rate against all airlines (open dot) and against other airlines at the same airports
+    (filled dot). If both dots sit right of the flag line, where the airline flies doesn't explain it."""
+    d = df.iloc[::-1]
+    labels = [carrier_label(c) for c in d.index]
+    xs, ys = [], []
+    for lab, a, b in zip(labels, d["index"], d["adj_index"]):
+        xs += [a, b, None]
+        ys += [lab, lab, None]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=xs, y=ys, mode="lines", line=dict(color=NEUTRAL, width=3), hoverinfo="skip",
+                             showlegend=False))
+    fig.add_trace(go.Scatter(
+        x=d["index"], y=labels, mode="markers", name="Against all airlines",
+        marker=dict(size=11, color="rgba(0,0,0,0)", line=dict(color=REFERENCE, width=2)),
+        hovertemplate="<b>%{y}</b><br>%{x:.2f}× all airlines<extra></extra>"))
+    fig.add_trace(go.Scatter(
+        x=d["adj_index"], y=labels, mode="markers+text", name="Against other airlines at the same airports",
+        marker=dict(size=12, color=[FLAGGED if f else REFERENCE for f in d["flagged"]]),
+        text=[f"{v:.2f}× " if f else "" for v, f in zip(d["adj_index"], d["flagged"])], textposition="middle left",
+        hovertemplate="<b>%{y}</b><br>%{x:.2f}× other airlines at the same airports<extra></extra>"))
+    fig.add_vline(x=1.0, line_dash="dash", line_color=REFERENCE, line_width=1,
+                  annotation_text="Average", annotation_position="top")
+    fig.add_vline(x=agg.FLAG_INDEX, line_dash="dot", line_color=FLAGGED, line_width=1,
+                  annotation_text=f"Flag line {agg.FLAG_INDEX}×", annotation_position="top right")
+    fig.update_layout(
+        height=28 * len(d) + 140, margin=dict(l=10, r=40, t=40, b=40), xaxis_title="× the average (1.0 = average)",
+        legend=dict(orientation="h", yanchor="bottom", y=1.04, x=0), clickmode="event+select", dragmode=False,
+        hovermode="closest")
+    st.plotly_chart(fig, width="stretch", config=PLOTLY_CONFIG, key=key, on_select=on_select, selection_mode="points")
+
+
 def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title: str = "min per flight",
             ticktext: list[str] | None = None, reference: float | None = None, height: int = 340,
             label_lines: bool = False):
@@ -433,12 +465,6 @@ with left:
     if hero.exists():
         cap = APP_DIR / "assets" / "hero_caption.txt"
         st.image(str(hero), caption=cap.read_text().strip() if cap.exists() else None)
-    st.markdown("**Start with a question**")
-    worst, worst_airport = carriers.index[0], airports.index[0]
-    st.button(f"Why is {short(worst)} the worst airline? →", on_click=open_airline, args=(worst,), type="tertiary")
-    st.button(f"What's going wrong at {airport_cities().get(worst_airport, worst_airport).split(',')[0]}? →",
-              on_click=open_airport, args=(worst_airport,), type="tertiary")
-    st.button("What would fixing it be worth? →", on_click=run_recommendation, type="tertiary")
 with right:
     st.html(departures_board(carriers, f"CARRIER-ATTRIBUTABLE DELAY · {period}"))
 
@@ -456,7 +482,7 @@ with tab_findings:
                 "an airline has to stand out in each year to be flagged. Single years can flag a few more airlines.")
         n2.button("Back to both years", on_click=back_to_both_years, key="both_years")
     st.html('<div class="toc"><a href="#f1">01 Airlines</a><a href="#f2">02 First flights</a>'
-            '<a href="#f3">03 Airports</a><a href="#so-what">So what</a></div>')
+            '<a href="#f3">03 Airports</a><a href="#so-what">The recommendation</a></div>')
     names = (", ".join(short(c) for c in flagged[:-1]) + " and " + short(flagged[-1])) if len(flagged) > 1 else \
         (short(flagged[0]) if flagged else "No airline")
     s1, s2, s3 = st.columns(3)
@@ -479,13 +505,12 @@ with tab_findings:
         st.markdown(
             f"**{names} {'stand' if plural else 'stands'} out, and not because of where they fly.** {rates}, against "
             f"{net:.1f} for the network. {subject} still at least {worst_adj:.1f}× the rate of other airlines flying "
-            "from the same airports. Click a bar to look closer."
+            "from the same airports, shown below. Click an airline to look closer."
         )
     labels = [carrier_label(c) for c in carriers.index]
-    hbar(carriers, labels, set(flagged), "Carrier-attributable delay (min per flight)", key="overview_chart",
-         on_select=lambda: pick_from_chart("overview_chart", dict(zip(labels, carriers.index)), open_airline))
-    st.caption("Orange = flagged: at least 1.2× the network average overall, in every year, and against other "
-               "airlines at the same airports.")
+    dumbbell(carriers, key="overview_chart",
+             on_select=lambda: pick_from_chart("overview_chart", dict(zip(labels, carriers.index)), open_airline))
+    st.caption("Orange = flagged: past the flag line on both measures, in every year.")
 
     st.html('<p class="finding-no">FINDING 02</p>')
     worst_bands = {agg.band_table(by_time, c)["excess_hours_per_year"].idxmax() for c in flagged}
@@ -542,11 +567,10 @@ with tab_findings:
         "flagged airlines. Click a dot to see who's behind an airport's delay."
     )
     airport_map("findings_map")
-    st.caption("Bubble size = departures. Colour = carrier-attributable delay against the network (blue better, "
-               "orange worse). Labelled = flagged. San Juan, Puerto Rico isn't on the map; pick it from the list "
-               "on the Airports tab.")
+    st.caption("Bubble size = departures; colour = delay against the average (blue better, orange worse); labelled = "
+               "flagged. San Juan, Puerto Rico is in the Airports tab list.")
 
-    st.html('<p class="finding-no">SO WHAT</p>')
+    st.html('<p class="finding-no">THE RECOMMENDATION</p>')
     st.subheader(f"Fixing their first flights of the day is worth about {round(first_wave, -2):,.0f} hours a year",
                  anchor="so-what")
     st.markdown(
@@ -805,8 +829,4 @@ with tab_method:
                            file_name="where-airlines-lose-time-report.pdf", mime="application/pdf", type="primary")
     st.caption("Airport coordinates: OurAirports.")
 
-st.divider()
-st.caption(
-    "Source: US DOT Bureau of Transportation Statistics, Reporting Carrier On-Time Performance. "
-    "Cause minutes are only recorded for flights 15+ minutes late and are self-reported by airlines."
-)
+
