@@ -96,35 +96,36 @@
   <ul>
     <li><strong>Data:</strong> 14.1M flights from the US Bureau of Transportation Statistics, which records the cause of every delay of 15+ minutes. Cancelled and diverted flights are excluded from the delay measures.</li>
     <li><strong>Measure:</strong> carrier-attributable delay minutes per flight. It's called <em>carrier-attributable</em>, not "mechanical", because BTS records maintenance in the same field as crew, cleaning and baggage.</li>
-    <li><strong>"Disproportionate"</strong> means at least 1.2× the network average in <em>each</em> year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.</li>
+    <li><strong>"Disproportionate"</strong> means at least 1.2× the all-airline average in <em>each</em> year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.</li>
     <li><strong>Robustness:</strong> re-run without the July 2024 CrowdStrike IT outage. SkyWest and American stay flagged; Frontier, just under the bar in 2024, also crosses it.</li>
   </ul>
 
   <h2>What the data shows</h2>
 
   <h3>1. Two carriers stand out</h3>
-  <p>SkyWest (a regional airline flying for United, Delta, American and Alaska) averages 8.0 minutes of carrier-attributable delay per flight, and American 7.2, against a network average of 5.2. Both run at about 1.3× the rate of other airlines at the same airports, in 2024 and in 2025. They fail differently: SkyWest's delays are slightly rarer but nearly twice as long, and American's are more frequent.</p>
-  <figure><img src="figures/1_carriers.png" alt="Bar chart of carrier-attributable delay per flight by airline. SkyWest 8.0 and American 7.2 minutes are highlighted, against a network average of 5.2."></figure>
+  <p>SkyWest (a regional airline flying for United, Delta, American and Alaska) averages 8.0 minutes of carrier-attributable delay per flight, and American 7.2, against an all-airline average of 5.2. Both run at about 1.3× the rate of other airlines at the same airports, in 2024 and in 2025. They fail differently: SkyWest's delays are slightly rarer but nearly twice as long, and American's are more frequent.</p>
+  <figure><img src="figures/1_carriers.png" alt="Bar chart of carrier-attributable delay per flight by airline. SkyWest 8.0 and American 7.2 minutes are highlighted, against an all-airline average of 5.2."></figure>
 
   <h3>2. Airports matter far less than airlines</h3>
   <p>Detroit, Madison and Des Moines are flagged, but together they account for about 5,600 excess delay hours a year. The two flagged carriers account for 68,100.</p>
   <figure><img src="figures/2_airports.png" alt="Bar chart of the 15 airports with the most carrier-attributable delay per departure. Detroit 7.5, Madison 7.3 and Des Moines 6.7 minutes are highlighted."></figure>
 
   <h3>3. Timing makes it worse, and the first flights of the day are where the two carriers fall furthest behind</h3>
-  <p>Across all airlines, carrier-attributable delay is twice as high at 22:00 as at 10:00, and Sunday is the worst day. But SkyWest and American lose the most ground <em>before 09:00</em>, when the rest of the network runs better than its daily average. There they run 1.76× and 1.51× the network rate.</p>
+  <p>Across all airlines, carrier-attributable delay is twice as high at 22:00 as at 10:00, and Sunday is the worst day. But SkyWest and American lose the most ground <em>before 09:00</em>, when airlines as a whole run better than their daily average. There they run 1.76× and 1.51× the all-airline rate.</p>
   <figure><img src="figures/3_hour_weekday.png" alt="Heatmap of carrier-attributable delay by scheduled departure hour and weekday. Delay is lowest around 9 to 11 in the morning and highest around 22:00, especially on Sundays."></figure>
 
   <h2>Recommendation</h2>
   <div class="rec">
     <p class="big">Fix the first flights of the day at SkyWest and American.</p>
-    <p>Bringing their pre-09:00 departures down to the network's pre-09:00 rate would remove about <strong>20,600 delay hours a year</strong> (10,300 each). Likely places to look are overnight maintenance sign-off, crew turning up on time and getting aircraft ready at the airports where their first flights of the day leave from. The estimate is conservative, because a late first flight also delays later flights, and that knock-on delay isn't counted here.</p>
+    <p>Bringing their pre-09:00 departures down to the all-airline pre-09:00 rate would remove about <strong>20,600 delay hours a year</strong> (10,300 each). Likely places to look are overnight maintenance sign-off, crew turning up on time and getting aircraft ready at the airports where their first flights of the day leave from. The estimate is conservative, because a late first flight also delays later flights, and that knock-on delay isn't counted here.</p>
   </div>
 
   <h2>Limits</h2>
   <p class="small">The data only records causes for delays of 15+ minutes. It can't tell maintenance apart from crew or cleaning, and airlines report the causes themselves. It covers US domestic flying only, so results may not carry over to other markets.</p>
 
   <footer>
-    Python · pandas · matplotlib. Full report with method and supporting tables: <a href="aviation_delay_report.html">aviation_delay_report.html</a> (<a href="aviation_delay_report.pdf">PDF</a>).
+    Interactive version: <a href="https://edwinleow-aviation-delays.streamlit.app/">edwinleow-aviation-delays.streamlit.app</a>.<br>
+    Python · pandas · matplotlib · Streamlit. Full report with method and supporting tables: <a href="aviation_delay_report.html">aviation_delay_report.html</a> (<a href="aviation_delay_report.pdf">PDF</a>).
   </footer>
 </main>
 </body>
