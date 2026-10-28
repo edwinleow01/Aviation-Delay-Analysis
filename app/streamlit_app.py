@@ -382,36 +382,6 @@ def pick_from_chart(chart_key: str, codes_by_label: dict[str, str], action) -> N
         action(codes_by_label[points[0]["y"]])
 
 
-# ---- appearance (light / dark) ----------------------------------------------------------
-# Streamlit keeps each visitor's theme choice in their browser (localStorage, the same entry its own
-# Settings menu writes) and reads it when the page loads. The switch writes that entry, records the
-# choice in the URL (?theme=...) so the switch can show it, and reloads the page.
-APPEARANCE = {"Match device": ("System", "system"), "Light": ("Light", "light"), "Dark": ("Dark", "dark")}
-if "appearance" not in st.session_state:
-    by_param = {v[1]: k for k, v in APPEARANCE.items()}.get(st.query_params.get("theme", ""))
-    current = getattr(st.context.theme, "type", None)
-    st.session_state["appearance"] = by_param or ("Dark" if current == "dark" else "Light")
-
-
-def request_appearance() -> None:
-    choice = st.session_state["appearance"] or "Match device"
-    st.session_state["appearance"] = choice
-    st.session_state["apply_appearance"] = choice
-
-
-def apply_appearance_script(choice: str) -> str:
-    stored, param = APPEARANCE[choice]
-    return f"""<script>
-(() => {{
-  const key = `stActiveTheme-${{window.location.pathname}}-v2`;
-  try {{ window.localStorage.setItem(key, JSON.stringify("{stored}")); }} catch (e) {{}}
-  const url = new URL(window.location.href);
-  url.searchParams.set("theme", "{param}");
-  window.location.replace(url.toString());
-}})();
-</script>"""
-
-
 # ---- sidebar --------------------------------------------------------------------------
 with st.sidebar:
     st.subheader("Getting around")
@@ -421,12 +391,10 @@ with st.sidebar:
         "- **Airports**: pick any airport, or click a dot on the map.\n"
         "- **What if**: see what a fix would be worth.\n"
         "- **Method & report**: how it was done, plus the full report as a PDF.\n\n"
-        "Click any bar or map dot to jump to that airline or airport. Hover over a chart for exact numbers."
+        "Click any bar or map dot to jump to that airline or airport. Hover over a chart for exact numbers.\n\n"
+        "**Light or dark:** open the ⋮ menu (top right) and pick System, Light or Dark."
     )
     st.segmented_control("Period", YEAR_OPTIONS, key="year", help="Both years together, or one year on its own.")
-    st.segmented_control("Appearance", list(APPEARANCE), key="appearance", on_change=request_appearance,
-                         help="Light or dark. 'Match device' follows your phone or computer setting. "
-                              "Switching reloads the page.")
     with st.expander("What the numbers mean"):
         st.markdown(
             "- **Carrier-attributable delay**: delay caused inside the airline's own operation: maintenance, crew, "
@@ -439,15 +407,6 @@ with st.sidebar:
             "- **Excess hours / yr**: delay hours above what the network average rate would give.\n"
             "- **First wave**: departures scheduled before 09:00."
         )
-    st.divider()
-    st.caption(
-        "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. US data is used because CAAS/data.gov.sg "
-        "only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly "
-        "available."
-    )
-
-if pending := st.session_state.pop("apply_appearance", None):
-    st.html(apply_appearance_script(pending), unsafe_allow_javascript=True)
 
 # ---- header ---------------------------------------------------------------------------
 first_wave = sum(agg.what_if(by_time, c, ["<09:00"]) for c in flagged)
