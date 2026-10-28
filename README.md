@@ -57,7 +57,7 @@ Live app: **https://edwinleow-aviation-delays.streamlit.app/**
 
 **Using it.** The front page reads like a short article: three findings, each with a chart, a departures-board
 graphic of the airline ranking, a map of US airports and a diagram of how one late morning flight spreads delay
-through an aircraft's day. The "Start with a question" links and every chart are clickable: click a bar or a map dot
+through an aircraft's day. Every chart is clickable: click an airline, a bar or a map dot
 to open that airline or airport. The sidebar has a short guide, a glossary and a period switch (both years, 2024,
 2025). Colours mean the same thing everywhere: orange = flagged, blue = the one you picked, aqua = the comparison
 airline, dashed grey = network average. The light and dark themes (`.streamlit/config.toml`) follow the
@@ -71,7 +71,7 @@ Picking 2024 or 2025 changes the Findings tab too, with a note that the main con
 **2-minute demo script**
 
 1. **Front page:** read the standfirst and the departures board. SkyWest and American are the two flagged airlines.
-2. **Finding 01:** the bar chart. Click SkyWest: 1.54× the network, still 1.34× against others at the same airports, in
+2. **Finding 01:** the two-dot chart (against all airlines, and against other airlines at the same airports). Click SkyWest: 1.54× the network, still 1.34× against others at the same airports, in
    both years. Its worst airports against other airlines there are Flint, Midland/Odessa and Lubbock. Compare it with Southwest.
 3. **Finding 02:** the first-wave chart and the "One aircraft's day" diagram. This is why the morning matters.
 4. **Finding 03:** the map. Click Detroit: SkyWest averages 13.7 min per departure there.
