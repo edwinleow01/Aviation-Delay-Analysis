@@ -441,7 +441,7 @@ with st.sidebar:
         )
     st.divider()
     st.caption(
-        "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. I used BTS because CAAS/data.gov.sg "
+        "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. US data is used because CAAS/data.gov.sg "
         "only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly "
         "available."
     )
@@ -457,8 +457,8 @@ with left:
     st.title("Where airlines lose time")
     st.html(
         '<p class="standfirst">Weather and air traffic get the blame for late flights, but a third of recorded delay minutes '
-        "come from inside the airline: maintenance, crew, cleaning, fuelling, baggage. I went through 13.8 million US "
-        "flights to find out which airlines and airports lose the most time this way, and when it happens.</p>"
+        "come from inside the airline: maintenance, crew, cleaning, fuelling, baggage. Across 13.8 million US flights, "
+        "which airlines and airports lose the most time this way, and when does it happen?</p>"
         '<p class="byline">Data: US DOT Bureau of Transportation Statistics</p>'
     )
     hero = APP_DIR / "assets" / "hero.jpg"
@@ -787,7 +787,7 @@ with tab_whatif:
 
 # ---- method & report ------------------------------------------------------------------
 with tab_method:
-    st.subheader("How I did it")
+    st.subheader("How the analysis works")
     st.markdown(
         '<p class="lead">The short version: one public dataset, one measure, and a deliberately strict rule for what '
         "counts as standing out. Everything on this tab describes the full 2024–2025 data.</p>",
@@ -798,14 +798,14 @@ with tab_method:
         st.markdown(
             "**The data.** The US Department of Transportation's Bureau of Transportation Statistics (BTS) records "
             "every domestic flight by the larger US airlines, with the cause of every delay of 15 minutes or more. "
-            "I used January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) "
+            "This analysis uses January 2024 to December 2025: 14.1 million flights. Cancelled (199,000) and diverted (37,000) "
             "flights have no delay breakdown, so the measures use the 13.8 million completed flights. Only 2 delayed "
             "flights were missing their cause data.\n\n"
             "**Why US data.** CAAS/data.gov.sg only publishes aggregate monthly figures for Changi, and no flight-level, "
             "cause-coded delay data is publicly available. BTS is the best public dataset with that level of detail.\n\n"
             "**The measure.** Carrier-attributable delay minutes per completed flight. BTS splits each delay into five "
             "causes; *carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, "
-            "baggage). BTS has no separate mechanical field, so I never call it mechanical delay.\n\n"
+            "baggage). BTS has no separate mechanical field, so this is never called mechanical delay here.\n\n"
             "**What counts as standing out.** An airline or airport is flagged only if it's at least 1.2× the network "
             "average on all three tests: over the two years, in each year separately, and against other airlines at "
             "the same airports (or, for an airport, the same airlines elsewhere). That last test stops anyone being "

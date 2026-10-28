@@ -118,3 +118,12 @@ def test_no_author_name_or_tool_credits_on_the_site():
     text = " ".join(m.value for m in at.markdown) + " ".join(c.value for c in at.caption)
     text += " ".join(h.proto.body for h in at.get("html"))
     assert "edwin" not in text.lower() and "built by" not in text.lower() and "built with" not in text.lower()
+
+
+def test_site_text_is_neutral_not_first_person():
+    import re
+
+    at = run_app()
+    text = " ".join(m.value for m in at.markdown) + " ".join(c.value for c in at.caption)
+    text += " ".join(re.sub(r"<[^>]+>", " ", h.proto.body) for h in at.get("html")) + " ".join(s.value for s in at.subheader)
+    assert not re.search(r"\b(I|I've|I'm|my|me)\b", text), re.search(r".{40}\b(I|I've|I'm|my|me)\b.{40}", text)
