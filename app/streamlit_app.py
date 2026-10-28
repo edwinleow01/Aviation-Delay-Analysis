@@ -29,7 +29,6 @@ from aviation_delays.data import (  # noqa: E402
 )
 from aviation_delays.metrics import TIME_BANDS  # noqa: E402
 
-AUTHOR = "Edwin Leow"
 REPORT_PDF = APP_DIR.parent / "report" / "aviation_delay_report.pdf"
 
 # Chart colours: each one has a single job everywhere in the app.
@@ -442,7 +441,6 @@ with st.sidebar:
         )
     st.divider()
     st.caption(
-        f"Built by {AUTHOR} with Python, pandas, Plotly and Streamlit.\n\n"
         "Data: US DOT Bureau of Transportation Statistics, On-Time Performance. I used BTS because CAAS/data.gov.sg "
         "only publishes aggregate monthly figures for Changi, and no flight-level, cause-coded delay data is publicly "
         "available."
@@ -461,7 +459,7 @@ with left:
         '<p class="standfirst">Weather and air traffic get the blame for late flights, but a third of recorded delay minutes '
         "come from inside the airline: maintenance, crew, cleaning, fuelling, baggage. I went through 13.8 million US "
         "flights to find out which airlines and airports lose the most time this way, and when it happens.</p>"
-        f'<p class="byline">By {AUTHOR} · Data: US DOT Bureau of Transportation Statistics</p>'
+        '<p class="byline">Data: US DOT Bureau of Transportation Statistics</p>'
     )
     hero = APP_DIR / "assets" / "hero.jpg"
     if hero.exists():
@@ -840,7 +838,7 @@ with tab_method:
     if REPORT_PDF.exists():
         st.download_button("Download the full report (PDF)", data=REPORT_PDF.read_bytes(),
                            file_name="where-airlines-lose-time-report.pdf", mime="application/pdf", type="primary")
-    st.caption(f"Built by {AUTHOR} with Python, pandas, Plotly and Streamlit. Airport coordinates: OurAirports.")
+    st.caption("Airport coordinates: OurAirports.")
 
 st.divider()
 st.caption(
