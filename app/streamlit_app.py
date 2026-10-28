@@ -70,6 +70,10 @@ st.html("""
   [role="tab"][aria-selected="false"] { color: inherit !important; }
   [role="tab"]:focus:not(:focus-visible) { outline: none !important; }
   [role="tab"]:focus-visible { outline: 2px solid currentColor !important; outline-offset: 2px; border-radius: 4px; }
+  /* Metric labels and values wrap onto a second line instead of being cut off with "…" on narrower laptop screens. */
+  [data-testid="stMetricValue"] *, [data-testid="stMetricLabel"] * { white-space: normal !important; overflow: visible !important;
+    text-overflow: clip !important; overflow-wrap: normal !important; word-break: normal !important; }
+  [data-testid="stMetricValue"] { font-size: clamp(1.4rem, 3vw, 2.25rem) !important; }
 </style>
 """)
 
@@ -758,18 +762,18 @@ with tab_whatif:
             "Flights a year": round(sel["flights"].sum() / n_years),
         })
     total = sum(r["Hours saved a year"] for r in rows)
-    r1, r2 = st.columns([1, 2])
-    r1.metric("Carrier-attributable delay removed", f"{round(total, -2):,.0f} hours a year")
+    # Full width, sentence underneath: in a narrow column the value was cut off ("20,600 hours a ...") on laptops.
+    st.metric("Carrier-attributable delay removed", f"{round(total, -2):,.0f} hours a year")
     if total > 0:
-        r2.markdown(
+        st.markdown(
             f"That's about **{total / 365:,.0f} hours of delay every day**, or roughly "
             f"**{total * 60 / max(1, sum(r['Flights a year'] for r in rows)):.1f} minutes** off each affected flight."
         )
     elif picked and picked_bands:
-        r2.markdown("These airlines are already at or better than the average at those times, so there's nothing to "
+        st.markdown("These airlines are already at or better than the average at those times, so there's nothing to "
                     "recover.")
     else:
-        r2.markdown("Pick at least one airline and one departure time.")
+        st.markdown("Pick at least one airline and one departure time.")
     if rows:
         st.dataframe(
             pd.DataFrame(rows).round({"Hours saved a year": 0}), hide_index=True, width="stretch",
