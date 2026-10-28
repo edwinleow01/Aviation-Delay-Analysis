@@ -141,7 +141,7 @@ PRESETS = {
     "The recommendation": (["<09:00"], 100),
     "Evening (17:00–21:00)": (["17–21"], 100),
     "All day": (list(TIME_BANDS), 100),
-    "Halfway there": (["<09:00"], 50),
+    "Half the gap before 09:00": (["<09:00"], 50),
 }
 
 
@@ -250,7 +250,7 @@ def departures_board(rows: pd.DataFrame, title: str, limit: int = 8) -> str:
   @media (prefers-reduced-motion: reduce) {{ .fids tr {{ animation:none; }} }}
 </style>
 <div class="fids" role="img" aria-label="Departures board ranking airlines by carrier-attributable delay">
-  <div class="top"><b>DEPARTURES</b><span>{html.escape(title)}<br>NETWORK AVG {net:.1f} MIN</span></div>
+  <div class="top"><b>DEPARTURES</b><span>{html.escape(title)}<br>ALL-AIRLINE AVG {net:.1f} MIN</span></div>
   <table>
     <thead><tr><th>AIRLINE</th><th>CODE</th><th class="num">MIN/FLT</th><th class="num">VS AVG</th><th>STATUS</th></tr></thead>
     <tbody>{''.join(body)}</tbody>
@@ -327,12 +327,12 @@ def hbar(df: pd.DataFrame, labels: list[str], flagged_codes: set[str], xlabel: s
             x=df["min_per_flight"], y=labels, orientation="h", marker_color=colors,
             text=text, textposition="outside", cliponaxis=False,
             customdata=df[["flights", "index"]].to_numpy(),
-            hovertemplate="<b>%{y}</b><br>%{x:.1f} min per flight<br>%{customdata[1]:.2f}× network average"
+            hovertemplate="<b>%{y}</b><br>%{x:.1f} min per flight<br>%{customdata[1]:.2f}× the average"
             "<br>%{customdata[0]:,} flights<extra></extra>",
         )
     )
     fig.add_vline(x=net, line_dash="dash", line_color=REFERENCE, line_width=1,
-                  annotation_text=f"Network average {net:.1f}", annotation_position="top")
+                  annotation_text=f"Average {net:.1f}", annotation_position="top")
     fig.update_layout(
         height=28 * len(df) + 110, margin=dict(l=10, r=40, t=30, b=40),
         xaxis_title=xlabel, bargap=0.3, showlegend=False, clickmode="event+select", dragmode=False,
@@ -390,7 +390,7 @@ def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title
                                xanchor="left", yanchor="bottom", yshift=8, font=dict(size=12))
     if reference is not None:
         fig.add_hline(y=reference, line_dash="dash", line_color=REFERENCE, line_width=1,
-                      annotation_text="Network average", annotation_position="bottom right")
+                      annotation_text="Average", annotation_position="bottom right")
     fig.update_layout(
         height=height, margin=dict(l=10, r=10, t=30, b=40), xaxis_title=x_title, yaxis_title=y_title,
         yaxis_rangemode="tozero", hovermode="x unified", dragmode=False,
@@ -412,11 +412,11 @@ def airport_map(key: str):
         marker=dict(size=size, color=df["index"].clip(0.5, 1.5), cmin=0.5, cmax=1.5, colorscale=MAP_SCALE,
                     line=dict(width=[4 if c == st.session_state["airport"] else 0.6 for c in df.index],
                               color=[SELECTED if c == st.session_state["airport"] else "rgba(20,30,50,.45)" for c in df.index]),
-                    colorbar=dict(title=dict(text="vs network", side="top"), orientation="h", thickness=10,
+                    colorbar=dict(title=dict(text="vs the average", side="top"), orientation="h", thickness=10,
                                   len=0.6, x=0.5, xanchor="center", y=-0.02, yanchor="top", tickvals=[0.5, 1, 1.5],
                                   ticktext=["0.5× (better)", "1× (average)", "1.5× (worse)"])),
         text=labels, customdata=np.stack([df["min_per_flight"], df["index"], df["flights"]], axis=1),
-        hovertemplate="<b>%{text}</b><br>%{customdata[0]:.1f} min per departure<br>%{customdata[1]:.2f}× network"
+        hovertemplate="<b>%{text}</b><br>%{customdata[0]:.1f} min per departure<br>%{customdata[1]:.2f}× the average"
         "<br>%{customdata[2]:,} departures<extra></extra>",
     ))
     flag = df[df["flagged"]]
@@ -463,11 +463,11 @@ with st.sidebar:
             "- **Carrier-attributable delay**: delay caused inside the airline's own operation: maintenance, crew, "
             "cleaning, fuelling, baggage. Not weather or air traffic control. Not the same as 'mechanical' delay.\n"
             "- **Min per flight**: those delay minutes averaged over every completed flight.\n"
-            "- **× network**: compared with all airlines together. 1.5× = 50% worse than average.\n"
+            "- **× the average**: compared with all airlines (or all airports) together. 1.5× = 50% worse than average.\n"
             "- **vs others at same airports**: compared with other airlines at the same airports, so no one is "
             "penalised for flying from difficult airports.\n"
-            "- **Flagged**: at least 1.2× the network on every test, in every year.\n"
-            "- **Excess hours / yr**: delay hours above what the network average rate would give.\n"
+            "- **Flagged**: at least 1.2× the average on every test, in every year.\n"
+            "- **Excess hours / yr**: delay hours a year above what the average rate would give.\n"
             "- **First wave**: departures scheduled before 09:00."
         )
 
@@ -526,7 +526,7 @@ with tab_findings:
             ", " + joined([f"{short(c)} {m}" for c, m in zip(flagged[1:], mins[1:])]) if plural else "")
         st.markdown(
             f"**{names} {'stand' if plural else 'stands'} out, and not because of where they fly.** {rates}, against "
-            f"{net:.1f} for the network. {subject} still at least {worst_adj:.1f}× the rate of other airlines flying "
+            f"{net:.1f} across all airlines. {subject} still at least {worst_adj:.1f}× the rate of other airlines flying "
             "from the same airports, shown below. Click an airline to look closer."
         )
     labels = [carrier_label(c) for c in carriers.index]
@@ -546,7 +546,7 @@ with tab_findings:
         for c, color in zip(flagged, FLAGGED_MORE):
             series[short(c)] = (agg.hour_profile(by_time, c).loc[5:22] / network_hours, color, "solid")
         if series:
-            profile(series, "Scheduled departure hour (local)", "× network average", reference=1.0, height=320,
+            profile(series, "Scheduled departure hour (local)", "× the average", reference=1.0, height=320,
                     label_lines=True)
     with f2:
         if first_wave_story:
@@ -560,16 +560,16 @@ with tab_findings:
                 ("**Their biggest gap is before 09:00.** " if widest else "**They lose the most hours before 09:00.** ")
                 + "Across all airlines, carrier-attributable delay is lowest in the late morning and builds through the "
                 "day, and theirs follows the same shape. "
-                + ("But they're worse than the network at every hour" if always_worse else "But")
+                + ("But they're worse than the average at every hour" if always_worse else "But")
                 + (", and the gap is widest early: before 09:00" if widest else " before 09:00")
-                + f" they run {joined([f'{fw[c]['vs_network']:.2f}×' for c in flagged])} the network rate.\n\n"
+                + f" they run {joined([f'{fw[c]['vs_network']:.2f}×' for c in flagged])} the average for that time of day.\n\n"
                 f"Those early flights are {share_f} of their flights but {share_x} of their excess delay. And a late "
                 "first departure carries on through the aircraft's day, as below."
             )
         else:
             st.markdown(
                 f"**In {period} alone, the flagged airlines don't all lose the most time at the same time of day.** "
-                "The chart shows how far each one runs above the network at every hour. Over both years together, "
+                "The chart shows how far each one runs above the average at every hour. Over both years together, "
                 "SkyWest and American both lose the most before 09:00, which is what the recommendation is based on. "
                 "Switch the period back to both years to see that."
             )
@@ -620,11 +620,11 @@ with tab_airline:
     m = st.columns(4)
     m[0].metric("Delay per flight", f"{row['min_per_flight']:.1f} min",
                 help=f"Carrier-attributable delay per completed flight. All airlines: {net:.1f} min")
-    m[1].metric("vs network", f"{row['index']:.2f}×", help="1.00× = exactly average")
+    m[1].metric("vs all airlines", f"{row['index']:.2f}×", help="1.00× = exactly the average across all airlines")
     m[2].metric("vs others at same airports", f"{row['adj_index']:.2f}×",
                 help="Compared with other airlines flying from the same airports")
     m[3].metric("Excess delay", f"{round(row['excess_hours_per_year'], -2):,.0f} h / yr",
-                help="Delay hours a year above what the network average rate would give")
+                help="Delay hours a year above what the average rate would give")
 
     series_h = {name: (agg.hour_profile(by_time, code).loc[5:23], SELECTED, "solid")}
     series_d = {name: (agg.weekday_profile(by_time, code), SELECTED, "solid")}
@@ -645,19 +645,19 @@ with tab_airline:
     bands = agg.band_table(by_time, code)
     worst_band = bands["vs_network"].idxmax()
     st.markdown(f"**Worst time of day: {BAND_WORDS[worst_band]}**, at {bands.loc[worst_band, 'vs_network']:.2f}× "
-                "the network.")
+                "the average for that time of day.")
     with st.expander("Show the numbers for each time of day"):
         st.dataframe(
             bands.assign(excess_hours_per_year=bands["excess_hours_per_year"].round()).reset_index().rename(columns={
                 "band": "Scheduled departure", "flights": "Flights", "min_per_flight": "Min per flight",
-                "network_min_per_flight": "Network min per flight", "vs_network": "× network",
+                "network_min_per_flight": "All airlines, min per flight", "vs_network": "× the average",
                 "excess_hours_per_year": "Excess hours / yr"}),
             hide_index=True, width="stretch",
             column_config={
                 "Flights": st.column_config.NumberColumn(format="localized"),
                 "Min per flight": st.column_config.NumberColumn(format="%.1f"),
-                "Network min per flight": st.column_config.NumberColumn(format="%.1f"),
-                "× network": st.column_config.ProgressColumn(format="%.2f×", min_value=0,
+                "All airlines, min per flight": st.column_config.NumberColumn(format="%.1f"),
+                "× the average": st.column_config.ProgressColumn(format="%.2f×", min_value=0,
                                                              max_value=float(max(2.0, bands["vs_network"].max()))),
                 "Excess hours / yr": st.column_config.NumberColumn(format="localized"),
             },
@@ -716,7 +716,7 @@ with tab_airport:
     )
     m = st.columns(3)
     m[0].metric("Delay per departure", f"{row['min_per_flight']:.1f} min")
-    m[1].metric("vs network", f"{row['index']:.2f}×")
+    m[1].metric("vs all airports", f"{row['index']:.2f}×", help="1.00× = exactly the average across all airports")
     m[2].metric("vs same airlines elsewhere", f"{row['adj_index']:.2f}×",
                 help="Compared with the same airlines at other airports")
     airport_map("airport_map")
@@ -738,15 +738,16 @@ with tab_airport:
 # ---- what if --------------------------------------------------------------------------
 with tab_whatif:
     st.subheader("What would fixing it be worth?")
-    st.markdown("Start from a preset, or pick airlines and departure times yourself, then slide how much of the gap "
-                "to the network average they close.")
-    st.pills("Presets", list(PRESETS), key="wi_preset", on_change=apply_preset)
+    st.markdown("**The gap** is how much higher an airline's carrier-attributable delay is than the average across all "
+                "airlines at the same times of day. Pick a scenario, or choose airlines and times yourself, then set how "
+                "much of that gap they close.")
+    st.pills("Scenarios", list(PRESETS), key="wi_preset", on_change=apply_preset)
     w1, w2 = st.columns(2)
     w1.multiselect("Airlines", carriers.index.tolist(), key="wi_airlines", format_func=carrier_label,
                    on_change=custom_preset)
     w2.multiselect("Scheduled departure", list(TIME_BANDS), key="wi_bands", on_change=custom_preset,
                    format_func=lambda b: BAND_WORDS[b].capitalize() if b in ("<09:00", "21+") else BAND_WORDS[b])
-    st.slider("Share of the gap closed", 0, 100, step=10, format="%d%%", key="wi_close", on_change=custom_preset)
+    st.slider("How much of the gap they close", 0, 100, step=10, format="%d%%", key="wi_close", on_change=custom_preset)
     picked, picked_bands = st.session_state["wi_airlines"], st.session_state["wi_bands"]
     close = st.session_state["wi_close"] / 100
 
@@ -756,36 +757,36 @@ with tab_whatif:
         sel = b.loc[picked_bands] if picked_bands else b.iloc[0:0]
         rows.append({
             "Airline": short(c),
-            "vs all airlines": (sel["min_per_flight"] * sel["flights"]).sum()
+            "Delay vs the average": (sel["min_per_flight"] * sel["flights"]).sum()
             / (sel["network_min_per_flight"] * sel["flights"]).sum() if len(sel) else None,
-            "Flights / yr": round(sel["flights"].sum() / n_years),
-            "Hours saved / yr": agg.what_if(by_time, c, picked_bands, close),
+            "Flights a year": round(sel["flights"].sum() / n_years),
+            "Delay hours saved a year": agg.what_if(by_time, c, picked_bands, close),
         })
-    total = sum(r["Hours saved / yr"] for r in rows)
+    total = sum(r["Delay hours saved a year"] for r in rows)
     r1, r2 = st.columns([1, 2])
     r1.metric("Carrier-attributable delay removed", f"{round(total, -2):,.0f} hours a year")
     if total > 0:
         r2.markdown(
             f"That's about **{total / 365:,.0f} hours of delay every day**, or roughly "
-            f"**{total * 60 / max(1, sum(r['Flights / yr'] for r in rows)):.1f} minutes** off each affected flight."
+            f"**{total * 60 / max(1, sum(r['Flights a year'] for r in rows)):.1f} minutes** off each affected flight."
         )
     elif picked and picked_bands:
-        r2.markdown("These airlines are already at or better than the network at those times, so there's nothing to "
+        r2.markdown("These airlines are already at or better than the average at those times, so there's nothing to "
                     "recover.")
     else:
         r2.markdown("Pick at least one airline and one departure time.")
     if rows:
         st.dataframe(
-            pd.DataFrame(rows).round({"Hours saved / yr": 0}), hide_index=True, width="stretch",
+            pd.DataFrame(rows).round({"Delay hours saved a year": 0}), hide_index=True, width="stretch",
             column_config={
-                "vs all airlines": st.column_config.NumberColumn(format="%.2f×"),
-                "Flights / yr": st.column_config.NumberColumn(format="localized"),
-                "Hours saved / yr": st.column_config.NumberColumn(format="localized"),
+                "Delay vs the average": st.column_config.NumberColumn(format="%.2f×"),
+                "Flights a year": st.column_config.NumberColumn(format="localized"),
+                "Delay hours saved a year": st.column_config.NumberColumn(format="localized"),
             },
         )
     st.caption(
         "Conservative: knock-on delay to the aircraft's later flights isn't counted. Airlines already better than "
-        "the network at a given time count as zero."
+        "the average at a given time count as zero."
     )
 
 # ---- method & report ------------------------------------------------------------------
@@ -810,7 +811,7 @@ with tab_method:
         ("The measure", "Carrier-attributable delay minutes per completed flight. BTS splits each delay into five causes; "
          "*carrier* delay is the one inside the airline's control (maintenance, crew, cleaning, fuelling, baggage). BTS "
          "has no separate mechanical field, so this is never called mechanical delay here."),
-        ("What counts as standing out", "An airline or airport is flagged only if it's at least 1.2× the network average "
+        ("What counts as standing out", "An airline or airport is flagged only if it's at least 1.2× the average "
          "on all three tests: over the two years, in each year separately, and against other airlines at the same "
          "airports (or, for an airport, the same airlines elsewhere). That last test stops anyone being penalised for "
          "flying from difficult airports. Airlines need 50,000+ flights and airports 20,000+ departures to be ranked."),
@@ -821,7 +822,7 @@ with tab_method:
          "- Same result in **2024 and 2025 separately**: SkyWest and American are flagged in both, and each stays "
          "1.30–1.37× the rate of other airlines at the same airports in each year.\n"
          "- With the **CrowdStrike IT outage** (19–28 July 2024) removed, SkyWest and American stay flagged. Frontier, "
-         "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the network "
+         "just under the bar in 2024 (1.17×), also crosses it (1.22×), because the outage week pushed the "
          "average up.\n"
          "- JetBlue looked bad in 2024 (1.54×) but not in 2025 (1.02×), so it isn't flagged."),
         ("Limits",
