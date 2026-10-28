@@ -100,17 +100,11 @@ def test_method_tab_offers_the_pdf_and_no_code_links():
     assert "github.com" not in text.lower()
 
 
-def test_appearance_switch_writes_the_theme_and_reloads():
+def test_theme_is_left_to_streamlits_settings_menu():
     at = run_app()
-    assert at.session_state["appearance"] == "Light"  # test runner has no device theme: shows light
+    assert "appearance" not in at.session_state
     assert not any("stActiveTheme" in h.proto.body for h in at.get("html"))
-    at.session_state["appearance"] = "Dark"
-    at.session_state["apply_appearance"] = "Dark"  # what the switch's on_change callback sets
-    at.run()
-    script = next(h.proto.body for h in at.get("html") if "stActiveTheme" in h.proto.body)
-    assert '"Dark"' in script and 'searchParams.set("theme", "dark")' in script
-    at.run()  # the request is used once, not on every rerun
-    assert not any("stActiveTheme" in h.proto.body for h in at.get("html"))
+    assert any("Light or dark" in m.value and "⋮ menu" in m.value for m in at.markdown)
 
 
 def test_no_author_name_or_tool_credits_on_the_site():
