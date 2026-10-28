@@ -17,7 +17,7 @@ Airlines can't control the weather or air traffic. But a third of recorded delay
 - **"Disproportionate"** means at least 1.2× the network average in *each* year, and still that high when compared with other airlines at the same airports. That way no one is penalised just for flying from difficult airports.
 - **Robustness:** re-run without the July 2024 CrowdStrike IT outage. SkyWest and American stay flagged; Frontier, just under the bar in 2024, also crosses it.
 
-## What I found
+## What the data shows
 
 ### 1. Two carriers stand out
 
