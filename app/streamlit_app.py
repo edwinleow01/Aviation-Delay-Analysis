@@ -376,8 +376,7 @@ def dumbbell(df: pd.DataFrame, key: str, on_select):
 
 
 def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title: str = "min per flight",
-            ticktext: list[str] | None = None, reference: float | None = None, height: int = 340,
-            label_lines: bool = False):
+            ticktext: list[str] | None = None, reference: float | None = None, height: int = 340):
     fig = go.Figure()
     for name, (s, color, dash) in series.items():
         fig.add_trace(go.Scatter(
@@ -385,9 +384,6 @@ def profile(series: dict[str, tuple[pd.Series, str, str]], x_title: str, y_title
             line=dict(color=color, width=2, dash=dash), marker=dict(size=7),
             hovertemplate=f"{name}: %{{y:.2f}}<extra></extra>",
         ))
-        if label_lines:  # name each line where it starts, so readers don't have to match colours to the legend
-            fig.add_annotation(x=s.index[0], y=s.values[0], text=f"<b>{name}</b>", showarrow=False,
-                               xanchor="left", yanchor="bottom", yshift=8, font=dict(size=12))
     if reference is not None:
         fig.add_hline(y=reference, line_dash="dash", line_color=REFERENCE, line_width=1,
                       annotation_text="Average", annotation_position="bottom right")
@@ -546,8 +542,7 @@ with tab_findings:
         for c, color in zip(flagged, FLAGGED_MORE):
             series[short(c)] = (agg.hour_profile(by_time, c).loc[5:22] / network_hours, color, "solid")
         if series:
-            profile(series, "Scheduled departure hour (local)", "× the average", reference=1.0, height=320,
-                    label_lines=True)
+            profile(series, "Scheduled departure hour (local)", "× the average", reference=1.0, height=320)
     with f2:
         if first_wave_story:
             bt = {c: agg.band_table(by_time, c) for c in flagged}
